@@ -1,0 +1,7 @@
+*.exe
+*.so
+*.a
+*.log
+.idea
+log/example/*.log
+log/*.log
