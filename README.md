@@ -1,4 +1,4 @@
-# go-middle  [![GoDoc](https://godoc.org/github.com/srlemon/go-middle?status.svg)](https://godoc.org/github.com/srlemon/go-middle/config)
+# go-middle  [![GoDoc](https://godoc.org/github.com/srlemon/go-middle?status.svg)](https://godoc.org/github.com/srlemon/go-middle)
  a some middleware of glang 
  
  
