@@ -11,6 +11,9 @@ var a = &c{
 		Name string
 		Age  int
 	}{Name: "张三", Age: 19},
+	Data: map[string]interface{}{
+		"name":"sdsd",
+	},
 }
 
 func main() {
@@ -22,7 +25,6 @@ func main() {
 	if err = a.Save(nil); err != nil {
 		panic(err)
 	}
-
 	r := gin.Default()
 	r.GET("/", getConfig)
 	r.Run("0.0.0.0:1563")
@@ -47,4 +49,5 @@ type c struct {
 		Name string
 		Age  int
 	} `yaml:"用户"`
+	Data  map[string]interface{}
 }

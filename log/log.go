@@ -522,7 +522,7 @@ func NewLogFile(logPath string) (d *Logger) {
 
 	// log file(s)
 	if rf, err = rotatelogs.New(
-		logPath+".%Y%m%d",
+		logPath+".%Y%m%d"+".log",
 		//rotatelogs.WithLinkName(logPath),
 		rotatelogs.WithRotationTime(time.Hour*24),
 		rotatelogs.WithMaxAge(-1),
@@ -537,7 +537,7 @@ func NewLogFile(logPath string) (d *Logger) {
 	//}
 
 	// hook errors
-	d.AddHook(&HookError{Filepath: logPath + ".error"})
+	d.AddHook(&HookError{Filepath: logPath + ".error.log"})
 
 	return
 }

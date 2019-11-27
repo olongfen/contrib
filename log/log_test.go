@@ -6,7 +6,7 @@ import (
 
 func Test_File(t *testing.T) {
 	var (
-		l     = NewLogFile("./test.log")
+		l     = NewLogFile("./test")
 		l1, _ = NewLog(l)
 	)
 	l1.Infof("ha ha")

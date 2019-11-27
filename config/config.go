@@ -23,7 +23,7 @@ type Config struct {
 	silent     bool
 }
 
-// LoadConfiguration
+// LoadConfiguration load config
 func LoadConfiguration(configPath string, targetConfig, defaultConfig interface{}) (err error) {
 	var (
 		data []byte
@@ -68,7 +68,7 @@ func LoadConfiguration(configPath string, targetConfig, defaultConfig interface{
 	return
 }
 
-// Save 保存配置
+// Save save config
 func (c *Config) Save(newConfig interface{}) (err error) {
 	c.Lock()
 	defer c.Unlock()
@@ -111,7 +111,7 @@ func (c *Config) Save(newConfig interface{}) (err error) {
 	return
 }
 
-// GetSavePath 取保存地址
+// GetSavePath get path of save config
 func (c *Config) GetSavePath() (ret string, err error) {
 	if c.pathYaml == nil {
 		err = errors.New("param invalid")
@@ -122,7 +122,7 @@ func (c *Config) GetSavePath() (ret string, err error) {
 	return
 }
 
-// SetSavePath 设置保存地址
+// SetSavePath set save path
 func (c *Config) SetSavePath(savePath string) (err error) {
 	if len(savePath) == 0 {
 		c.pathYaml = nil
@@ -134,7 +134,7 @@ func (c *Config) SetSavePath(savePath string) (err error) {
 	return
 }
 
-// SetSavePoint 设置要保存的对象
+// SetSavePoint set save object
 func (c *Config) SetSavePoint(saveTarget interface{}) (err error) {
 	c.savePoint = saveTarget
 	return
