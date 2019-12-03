@@ -48,6 +48,14 @@ k9oYi5oH6Q/1YVVLWNbvlfNEwp9FPOpWhBJ8VpsskbD2+dz6JQ0040YZq80S/sR9
 	testTokenHmacSecret = []byte("sample hmac secret key for token")
 )
 
+var (
+	key, _ = NewKey(&Key{
+		RSAPrivateKeyPEM: testTokenRSAPrivateKeyPEM,
+		RSAPublicKeyPEM:  testTokenRSAPublicKeyPEM,
+		DefaultMethod:    EncodeRsa,
+	})
+)
+
 // 测试通用生成
 func Test_SessionParse(t *testing.T) {
 	var (
@@ -61,7 +69,7 @@ func Test_SessionParse(t *testing.T) {
 	)
 
 	// rsa
-	if tokenString, err = SessionEncode(testMap, EncodeRsa); err != nil {
+	if tokenString, err = SessionEncode(testMap, EncodeRsa, key); err != nil {
 		t.Fatal(err)
 	} else {
 		t.Logf("rsa token: %s", tokenString)
@@ -69,7 +77,7 @@ func Test_SessionParse(t *testing.T) {
 
 	//time.Sleep(time.Second * 3) // debug
 
-	if _m, _err := SessionDecode(tokenString); _err != nil {
+	if _m, _err := SessionDecode(tokenString, key); _err != nil {
 		t.Fatal(_err)
 	} else {
 		b, _ := json.Marshal(_m)
@@ -77,12 +85,12 @@ func Test_SessionParse(t *testing.T) {
 	}
 
 	// hmac
-	if tokenString, err = SessionEncode(testMap, EncodeHmac); err != nil {
+	if tokenString, err = SessionEncode(testMap, EncodeHmac, key); err != nil {
 		t.Fatal(err)
 	} else {
 		t.Logf("hmac token: %s", tokenString)
 	}
-	if _m, _err := SessionDecode(tokenString); _err != nil {
+	if _m, _err := SessionDecode(tokenString, key); _err != nil {
 		t.Fatal(_err)
 	} else {
 		b, _ := json.Marshal(_m)
@@ -93,14 +101,15 @@ func Test_SessionParse(t *testing.T) {
 // 测试session特定格式
 func Test_SessionParseAuto(t *testing.T) {
 	if s, err := SessionEncodeAuto(&Session{
-		UID:   "11111111-1111-1111-1111-111111111111",
-		Level: SessionLevelSecure,
-	}); err != nil {
+		UID:        "11111111-1111-1111-1111-111111111111",
+		Level:      SessionLevelSecure,
+		ExpireTime: time.Now().Add(time.Hour * 24).Unix(),
+	}, key); err != nil {
 		t.Fatal(err)
 	} else {
 		t.Logf("get token: %s", s)
 		// parse
-		if s2, err := SessionDecodeAuto(s); err != nil {
+		if s2, err := SessionDecodeAuto(s, key); err != nil {
 			t.Fatal(err)
 		} else {
 			b, _ := json.Marshal(s2)

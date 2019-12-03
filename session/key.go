@@ -17,7 +17,7 @@ type Key struct {
 	RSAPrivateKeyPEM []byte // 私钥
 	RSAPublicKeyPEM  []byte // 公钥
 	HmacSecret       []byte // HMAC密钥
-	DefaultMethod    string // 默认加密方法
+	Method           string // 加密方法
 	// hook
 	HookSessionCheck func(session *Session) error  // 二次检测session合法性
 	HookTokenCheck   func(token interface{}) error // 二次检测token合法性
@@ -151,7 +151,7 @@ func (d *Key) SessionEncodeAuto(s *Session) (token string, err error) {
 		m[TokenTagId] = s.ID
 	}
 
-	token, err = d.TokenEncode(m, d.DefaultMethod) // 默认加密
+	token, err = d.TokenEncode(m, d.Method) // 默认加密
 	return
 }
 
@@ -217,7 +217,7 @@ func (d *Key) TokenEncode(val map[string]interface{}, method string) (token stri
 
 // 将值编码为token
 func (d *Key) TokenEncodeAuto(val map[string]interface{}) (token string, err error) {
-	return d.TokenEncode(val, d.DefaultMethod)
+	return d.TokenEncode(val, d.Method)
 }
 
 // 取值的token的sha256
@@ -243,7 +243,7 @@ func (d *Key) SetRSA(priPem []byte, pubPem []byte) (err error) {
 	if err = d.Init(); err != nil {
 		return
 	}
-	d.DefaultMethod = EncodeRsa
+	d.Method = EncodeRsa
 	return
 }
 
@@ -257,7 +257,7 @@ func (d *Key) SetHmac(hmacPri []byte) (err error) {
 	if err = d.Init(); err != nil {
 		panic(err)
 	}
-	d.DefaultMethod = EncodeHmac
+	d.Method = EncodeHmac
 	return
 }
 
@@ -330,8 +330,8 @@ func (d *Key) Init() (err error) {
 	}
 
 	// default method
-	if len(d.DefaultMethod) == 0 {
-		d.DefaultMethod = CfgDefaultMethod
+	if len(d.Method) == 0 {
+		d.Method = CfgDefaultMethod
 	}
 
 	// rsa instance/replace
