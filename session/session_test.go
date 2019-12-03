@@ -93,7 +93,7 @@ func Test_SessionParse(t *testing.T) {
 // 测试session特定格式
 func Test_SessionParseAuto(t *testing.T) {
 	if s, err := SessionEncodeAuto(&Session{
-		Uid:   "11111111-1111-1111-1111-111111111111",
+		UID:   "11111111-1111-1111-1111-111111111111",
 		Level: SessionLevelSecure,
 	}); err != nil {
 		t.Fatal(err)

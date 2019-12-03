@@ -76,13 +76,13 @@ func (d *Key) SessionDecodeAuto(inf interface{}) (ret *Session, err error) {
 	if v, ok := val[TokenTagExp]; ok == true {
 		switch v_ := v.(type) {
 		case int32:
-			ret.Exp = int64(v_)
+			ret.ExpireTime = int64(v_)
 			break
 		case int64:
-			ret.Exp = v_
+			ret.ExpireTime = v_
 			break
 		case float64:
-			ret.Exp = int64(v_)
+			ret.ExpireTime = int64(v_)
 			break
 		default:
 			err = fmt.Errorf("unknown %s value: %v", TokenTagExp, v)
@@ -92,12 +92,12 @@ func (d *Key) SessionDecodeAuto(inf interface{}) (ret *Session, err error) {
 	// 内容
 	if v, ok := val[TokenTagCre]; ok == true {
 		if s, ok := v.(float64); ok == true {
-			ret.Cre = int64(s)
+			ret.CreateTime = int64(s)
 		}
 	}
 	if v, ok := val[TokenTagUid]; ok == true {
 		if s, ok := v.(string); ok == true {
-			ret.Uid = s
+			ret.UID = s
 		}
 	}
 	if v, ok := val[TokenTagLevel]; ok == true {
@@ -107,17 +107,17 @@ func (d *Key) SessionDecodeAuto(inf interface{}) (ret *Session, err error) {
 	}
 	if v, ok := val[TokenTagPsw]; ok == true {
 		if s, ok := v.(string); ok == true {
-			ret.Psw = s
+			ret.Password = s
 		}
 	}
 	if v, ok := val[TokenTagIp]; ok == true {
 		if s, ok := v.(string); ok == true {
-			ret.Ip = s
+			ret.IP = s
 		}
 	}
 	if v, ok := val[TokenTagId]; ok == true {
 		if s, ok := v.(string); ok == true {
-			ret.Id = s
+			ret.ID = s
 		}
 	}
 
@@ -150,32 +150,32 @@ func (d *Key) SessionEncodeAuto(s *Session) (token string, err error) {
 	var m = make(map[string]interface{})
 
 	// 必填:逻辑属性
-	m[TokenTagExp] = s.Exp // exp
+	m[TokenTagExp] = s.ExpireTime // ExpireTime
 
 	// 可选内容
-	if s.Cre > 0 {
+	if s.CreateTime > 0 {
 		// cre
-		m[TokenTagCre] = s.Cre
+		m[TokenTagCre] = s.CreateTime
 	}
-	if len(s.Uid) > 0 {
+	if len(s.UID) > 0 {
 		// uid
-		m[TokenTagUid] = s.Uid
+		m[TokenTagUid] = s.UID
 	}
 	if len(s.Level) > 0 {
 		// level
 		m[TokenTagLevel] = s.Level
 	}
-	if len(s.Psw) > 0 {
+	if len(s.Password) > 0 {
 		// psw
-		m[TokenTagPsw] = s.Psw
+		m[TokenTagPsw] = s.Password
 	}
-	if len(s.Ip) > 0 {
+	if len(s.IP) > 0 {
 		// ip
-		m[TokenTagIp] = s.Ip
+		m[TokenTagIp] = s.IP
 	}
-	if len(s.Id) > 0 {
+	if len(s.ID) > 0 {
 		// id
-		m[TokenTagId] = s.Id
+		m[TokenTagId] = s.ID
 	}
 
 	token, err = d.TokenEncode(m, d.DefaultMethod) // 默认加密
@@ -400,10 +400,8 @@ func NewKey(in *Key) (d *Key, err error) {
 
 // init
 func InitKey() (err error) {
-	if KeyDefault != nil {
-		if KeyDefault, err = NewKey(KeyDefault); err != nil {
-			return
-		}
+	if KeyDefault, err = NewKey(KeyDefault); err != nil {
+		return
 	}
 	return
 }

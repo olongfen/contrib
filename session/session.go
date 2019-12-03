@@ -57,15 +57,15 @@ const (
 // session规范
 type Session struct {
 	// 逻辑属性
-	Exp int64 `json:"exp,omitempty"` // 超时时间戳
+	ExpireTime int64 `json:"expireTime,omitempty"` // 超时时间戳
 	// 内容
-	Cre   int64  `json:"exp,omitempty"`   // 创建时间戳
-	Uid   string `json:"uid,omitempty"`   // 用户uid
-	Level string `json:"level,omitempty"` // 会话等级
-	Ip    string `json:"ip,omitempty"`    // 登陆地址
-	Id    string `json:"id,omitempty"`    // 唯一标记/设备id
+	CreateTime int64  `json:"createTime,omitempty"` // 创建时间戳
+	UID        string `json:"uid,omitempty"`        // 用户uid
+	Level      string `json:"level,omitempty"`      // 会话等级
+	IP         string `json:"ip,omitempty"`         // 登陆地址
+	ID         string `json:"id,omitempty"`         // 唯一标记/设备id
 	// 验证
-	Psw string `json:"psw,omitempty"` // 密码哈希摘要
+	Password string `json:"password,omitempty"` // 密码哈希摘要
 	// cache
 	CacheToken interface{} `json:"-"` //
 }
@@ -81,7 +81,7 @@ func SessionDecodeAuto(inf interface{}) (ret *Session, err error) {
 }
 
 // 将session编码为token
-func SessionEncodeAuto                                                                                                                                                                   (s *Session) (token string, err error) {
+func SessionEncodeAuto(s *Session) (token string, err error) {
 	if KeyDefault == nil {
 		err = project.ErrSessionKeyDefaultUndefined
 		return
@@ -111,7 +111,7 @@ func SessionEncode(val map[string]interface{}, method string) (token string, err
 }
 
 // 设置RSA密钥对
-func SessionSetRsa(priPem []byte, pubPem []byte) (err error) {
+func SessionSetRSA(priPem []byte, pubPem []byte) (err error) {
 	if KeyDefault == nil {
 		err = project.ErrSessionKeyDefaultUndefined
 		return
@@ -138,13 +138,13 @@ func SessionSetHmac(hmacPri []byte) (err error) {
 func (s *Session) Valid() (err error) {
 
 	// 没有uid的session无价值
-	if len(s.Uid) == 0 {
+	if len(s.UID) == 0 {
 		err = project.ErrSessionUidUndefined
 		return
 	}
 
 	// expire: normal
-	if s.Exp <= 0 {
+	if s.ExpireTime <= 0 {
 		err = project.ErrSessionExpUndefined
 		return
 	}
@@ -153,13 +153,13 @@ func (s *Session) Valid() (err error) {
 	var now_ = time.Now()
 	switch s.Level {
 	case SessionLevelNormal:
-		if s.Exp > now_.Add(SessionExpMaxNormal).Unix() {
+		if s.ExpireTime > now_.Add(SessionExpMaxNormal).Unix() {
 			err = project.ErrSessionExpMaxOutOfRange
 			return
 		}
 		break
 	case SessionLevelSecure:
-		if s.Exp > now_.Add(SessionExpMaxSecure).Unix() {
+		if s.ExpireTime > now_.Add(SessionExpMaxSecure).Unix() {
 			err = project.ErrSessionExpMaxOutOfRange
 			return
 		}
