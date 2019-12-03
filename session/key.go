@@ -12,12 +12,39 @@ import (
 	"net/http"
 )
 
+var (
+	// 默认值:RSA 钥匙对
+	defaultRSAPrivateKeyPEM = []byte(`-----BEGIN RSA PRIVATE KEY-----
+MIICXQIBAAKBgQDfMTvSG82J89CuPb0SyH5Uu4l80WJYnWAZdbYzt5h6Z5MEY0Dw
+3EIMvAceobGu/3RWOUc7H+tNb/4EhILbKokzdva0kjF56l7SWprxXu0zvkMfhtbh
+HX8S3Z5Oi3o3Or8eftzDgUP+hKVMgUmzhJG/ONpSnIB2zs9KIFr1fp+glwIDAQAB
+AoGACLHJS8kLe7lEwtTi3a1zxmc71uHtO9h9muBMBb28MeCBCKW5LOjXpdlZSacw
+3clTxdwbW0FGEFExiwmCc3k3uPfgvSoguWlx4envHTuTmI7NqZCBySLHA3Voym1R
+A7b/86nfs8igRCKhlZzX58QnzgRVPHP1NNMi2Ob2/kpCKdkCQQDlW/XElHBf1z8w
+/lwf3xr2dJozM+690Vifs+4MGjqH7QL2PRRTghzJG9KJg73f8TWvQrXJL3Eh8JA1
+iO54UYPtAkEA+R3mUxbqo8ToHPlrkDGuP9AWm2XQubW5zGFRi8PBvGFVNXW0KNbD
+Qm8Uco6lt+w6G0Pntfhmzn6o47YgKw9uEwJAZ2mQJWM8S6o0XrXA+cnRUV//iqiW
+s1UpnVA2O5Sz4Ud292lQudpHelGmGsSgntEWAICWkDBo1QGvM8QaqXsvfQJBANDE
+d+MmD1lTiNnPRI9AszCTKH7uYm9fledrnzUrxk4im5ADpgmbgWNJR6+BT+vEsiVr
+UOG03CMtDkhWtrqfYbUCQQDX0fRwnWtgf3DT3dyMV3UOTvidSmx7iTpMNlpBLe/l
+TGF0FeZcdNYeJdfwDgxgNL3rYQ9PGR8H89dEDC4eRlj4
+-----END RSA PRIVATE KEY-----`)
+	defaultRSAPublicKeyPEM = []byte(`-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDfMTvSG82J89CuPb0SyH5Uu4l8
+0WJYnWAZdbYzt5h6Z5MEY0Dw3EIMvAceobGu/3RWOUc7H+tNb/4EhILbKokzdva0
+kjF56l7SWprxXu0zvkMfhtbhHX8S3Z5Oi3o3Or8eftzDgUP+hKVMgUmzhJG/ONpS
+nIB2zs9KIFr1fp+glwIDAQAB
+-----END PUBLIC KEY-----`)
+	// 默认值:HMAC密钥
+	defaultHmacSecret = []byte("sample hmac secret key")
+)
+
 // 密钥实例
 type Key struct {
 	RSAPrivateKeyPEM []byte // 私钥
 	RSAPublicKeyPEM  []byte // 公钥
 	HmacSecret       []byte // HMAC密钥
-	Method           string // 加密方法
+	DefaultMethod    string // 默认加密方法
 	// hook
 	HookSessionCheck func(session *Session) error  // 二次检测session合法性
 	HookTokenCheck   func(token interface{}) error // 二次检测token合法性
@@ -151,7 +178,7 @@ func (d *Key) SessionEncodeAuto(s *Session) (token string, err error) {
 		m[TokenTagId] = s.ID
 	}
 
-	token, err = d.TokenEncode(m, d.Method) // 默认加密
+	token, err = d.TokenEncode(m, d.DefaultMethod) // 默认加密
 	return
 }
 
@@ -217,7 +244,7 @@ func (d *Key) TokenEncode(val map[string]interface{}, method string) (token stri
 
 // 将值编码为token
 func (d *Key) TokenEncodeAuto(val map[string]interface{}) (token string, err error) {
-	return d.TokenEncode(val, d.Method)
+	return d.TokenEncode(val, d.DefaultMethod)
 }
 
 // 取值的token的sha256
@@ -243,7 +270,7 @@ func (d *Key) SetRSA(priPem []byte, pubPem []byte) (err error) {
 	if err = d.Init(); err != nil {
 		return
 	}
-	d.Method = EncodeRsa
+	d.DefaultMethod = EncodeRsa
 	return
 }
 
@@ -257,7 +284,7 @@ func (d *Key) SetHmac(hmacPri []byte) (err error) {
 	if err = d.Init(); err != nil {
 		panic(err)
 	}
-	d.Method = EncodeHmac
+	d.DefaultMethod = EncodeHmac
 	return
 }
 
@@ -330,8 +357,14 @@ func (d *Key) Init() (err error) {
 	}
 
 	// default method
-	if len(d.Method) == 0 {
-		d.Method = CfgDefaultMethod
+	if len(d.DefaultMethod) == 0 {
+		d.DefaultMethod = CfgDefaultMethod
+	}
+
+	// rsa: default
+	if (len(d.RSAPrivateKeyPEM) == 0) && (len(d.RSAPublicKeyPEM) == 0) {
+		d.RSAPrivateKeyPEM = defaultRSAPrivateKeyPEM
+		d.RSAPublicKeyPEM = defaultRSAPublicKeyPEM
 	}
 
 	// rsa instance/replace
@@ -362,5 +395,13 @@ func NewKey(in *Key) (d *Key, err error) {
 		d = new(Key)
 	}
 	err = d.Init()
+	return
+}
+
+// init
+func InitKey() (err error) {
+	if KeyDefault, err = NewKey(KeyDefault); err != nil {
+		return
+	}
 	return
 }
