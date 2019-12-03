@@ -33,7 +33,7 @@ var (
 	SessionExpMaxSecure = time.Hour * 24       // 安全会话最长一天
 	//
 	CfgDefaultMethod = EncodeRsa // 默认加密方法
-	KeyDefault       *Key        // 默认key实例
+	keyDefault       *Key        // 默认key实例
 )
 
 const (
@@ -72,51 +72,51 @@ type Session struct {
 
 // 解析出session
 func SessionDecodeAuto(inf interface{}) (ret *Session, err error) {
-	if KeyDefault == nil {
+	if keyDefault == nil {
 		err = project.ErrSessionKeyDefaultUndefined
 		return
 	}
-	ret, err = KeyDefault.SessionDecodeAuto(inf)
+	ret, err = keyDefault.SessionDecodeAuto(inf)
 	return
 }
 
 // 将session编码为token
 func SessionEncodeAuto(s *Session) (token string, err error) {
-	if KeyDefault == nil {
+	if keyDefault == nil {
 		err = project.ErrSessionKeyDefaultUndefined
 		return
 	}
-	token, err = KeyDefault.SessionEncodeAuto(s)
+	token, err = keyDefault.SessionEncodeAuto(s)
 	return
 }
 
 // 解析出需要的值
 func SessionDecode(inf interface{}) (ret map[string]interface{}, err error) {
-	if KeyDefault == nil {
+	if keyDefault == nil {
 		err = project.ErrSessionKeyDefaultUndefined
 		return
 	}
-	ret, err = KeyDefault.TokenDecode(inf)
+	ret, err = keyDefault.TokenDecode(inf)
 	return
 }
 
 // 将值编码为token
 func SessionEncode(val map[string]interface{}, method string) (token string, err error) {
-	if KeyDefault == nil {
+	if keyDefault == nil {
 		err = project.ErrSessionKeyDefaultUndefined
 		return
 	}
-	token, err = KeyDefault.TokenEncode(val, method)
+	token, err = keyDefault.TokenEncode(val, method)
 	return
 }
 
 // 设置RSA密钥对
 func SessionSetRSA(priPem []byte, pubPem []byte) (err error) {
-	if KeyDefault == nil {
+	if keyDefault == nil {
 		err = project.ErrSessionKeyDefaultUndefined
 		return
 	}
-	if err = KeyDefault.SetRsa(priPem, pubPem); err != nil {
+	if err = keyDefault.SetRSA(priPem, pubPem); err != nil {
 		panic(err)
 	}
 	return
@@ -124,11 +124,11 @@ func SessionSetRSA(priPem []byte, pubPem []byte) (err error) {
 
 // 设置HMAC密钥
 func SessionSetHmac(hmacPri []byte) (err error) {
-	if KeyDefault == nil {
+	if keyDefault == nil {
 		err = project.ErrSessionKeyDefaultUndefined
 		return
 	}
-	if err = KeyDefault.SetHmac(hmacPri); err != nil {
+	if err = keyDefault.SetHmac(hmacPri); err != nil {
 		panic(err)
 	}
 	return
@@ -172,9 +172,13 @@ func (s *Session) Valid() (err error) {
 	return
 }
 
-func init() {
-	// key
-	if err := InitKey(); err != nil {
-		panic(err)
+func NewSession(in *Key) (err error) {
+	if in == nil {
+		err = project.ErrSessionKeyUndefined
+		return
 	}
+	if keyDefault, err = NewKey(in); err != nil {
+		return
+	}
+	return
 }
