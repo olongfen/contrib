@@ -1,7 +1,7 @@
 package session
 
 import (
-	project "github.com/srlemon/go-middle"
+	project "github.com/srlemon/contrib"
 
 	"time"
 )

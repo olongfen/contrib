@@ -1,6 +1,6 @@
 package main
 
-import "github.com/srlemon/go-middle/log"
+import "github.com/srlemon/contrib/log"
 
 func main() {
 	l := log.NewLogFile("demo.log")

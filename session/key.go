@@ -1,7 +1,7 @@
 package session
 
 import (
-	middle "github.com/srlemon/go-middle"
+	middle "github.com/srlemon/contrib"
 
 	"github.com/dgrijalva/jwt-go"
 

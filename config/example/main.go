@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/srlemon/go-middle/config"
+	"github.com/srlemon/contrib/config"
 )
 
 var a = &c{
@@ -12,7 +12,7 @@ var a = &c{
 		Age  int
 	}{Name: "张三", Age: 19},
 	Data: map[string]interface{}{
-		"name":"sdsd",
+		"name": "sdsd",
 	},
 }
 
@@ -49,5 +49,5 @@ type c struct {
 		Name string
 		Age  int
 	} `yaml:"用户"`
-	Data  map[string]interface{}
+	Data map[string]interface{}
 }

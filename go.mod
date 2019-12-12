@@ -1,4 +1,4 @@
-module github.com/srlemon/go-middle
+module github.com/srlemon/contrib
 
 go 1.13
 

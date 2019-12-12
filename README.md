@@ -1,8 +1,8 @@
-# go-middle  [![GoDoc](https://godoc.org/github.com/srlemon/go-middle?status.svg)](https://godoc.org/github.com/srlemon/go-middle)
+# go-middle  [![GoDoc](https://godoc.org/github.com/srlemon/contrib?status.svg)](https://godoc.org/github.com/srlemon/contrib)
  a some middleware of glang frame
  
 # Install
-` go get github.com/srlemon/go-middle`
+` go get github.com/srlemon/contrib`
  
 # USAGE
 
@@ -14,7 +14,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/srlemon/go-middle/config"
+	"github.com/srlemon/contrib/config"
 )
 
 var a = &c{
@@ -66,7 +66,7 @@ type c struct {
 ```golang
  package main
 
-import "github.com/srlemon/go-middle/log"
+import "github.com/srlemon/contrib/log"
 
 func main() {
 	l := log.NewLogFile("demo.log")
