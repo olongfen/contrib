@@ -1,4 +1,4 @@
-package middle
+package contrib
 
 import "testing"
 
