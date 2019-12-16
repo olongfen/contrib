@@ -20,8 +20,8 @@ func JSONMarshalMust(v interface{}) (ret []byte) {
 
 // ModelBase
 type ModelBase struct {
-	ID          uint `gorm:"unique_index；AUTO_INCREMENT"`
-	CreatedTime time.Time
-	UpdatedTime time.Time
-	DeletedTime *time.Time `sql:"index"`
+	ID         uint `gorm:"unique_index；AUTO_INCREMENT"`
+	CreateTime time.Time
+	UpdateTime time.Time
+	DeleteTime *time.Time `sql:"index"`
 }
