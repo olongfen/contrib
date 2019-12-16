@@ -7,7 +7,14 @@ type Query struct {
 	Limit           int                    `form:"limit" json:"limit"`
 	Page            int                    `form:"page" json:"page"`
 	SearchCondition map[string]interface{} `json:"searchCondition"`
-	Sort            interface{}            `json:"sort,omitempty"` // 可选信息.刚才用户提交的排序信息
+	Range           *OrmSearchRange
+	Sort            interface{} `json:"sort,omitempty"` // 可选信息.刚才用户提交的排序信息
+}
+
+//
+type OrmSearchRange struct {
+	Key   string
+	Value interface{}
 }
 
 // Default
