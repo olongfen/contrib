@@ -22,12 +22,6 @@ func (q *Query) Default() {
 	if q == nil {
 		q = new(Query)
 	}
-	if q.SearchCondition == nil {
-		q.SearchCondition = map[string]interface{}{}
-	}
-	if q.Range == nil {
-		q.Range = new(OrmSearchRange)
-	}
 	if q.Limit == 0 {
 		q.Limit = DEFAULT_LIMIT
 	}
