@@ -1,9 +1,14 @@
 package main
 
-import "github.com/srlemon/contrib/log"
+import (
+	"fmt"
+	"github.com/srlemon/contrib/log"
+)
 
 func main() {
-	l := log.NewLogFile("demo.log")
-	l1, _ := log.NewLog(l)
-	l1.Println("aaaaaaaaaa")
+	l1, _ := log.NewLog(nil)
+	defer log.PanicRecover(l1)
+	a := []int{}
+	fmt.Println(a[1])
+
 }
