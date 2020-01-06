@@ -1,4 +1,4 @@
-# go-middle  [![GoDoc](https://godoc.org/github.com/srlemon/contrib?status.svg)](https://godoc.org/github.com/srlemon/contrib)
+# go-contrib  [![GoDoc](https://godoc.org/github.com/srlemon/contrib?status.svg)](https://godoc.org/github.com/srlemon/contrib)
  a some middleware of glang frame
  
 # Install
