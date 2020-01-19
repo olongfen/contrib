@@ -72,6 +72,15 @@ type Error struct {
 	vars   []interface{}
 }
 
+// NewError
+func NewError(code int32, detail string, prefix string) (ret *Error) {
+	ret = new(Error)
+	ret.Code = code
+	ret.Detail = detail
+	ret.Prefix = prefix
+	return
+}
+
 func (e *Error) GetPrefix() string {
 	return e.Prefix
 }
