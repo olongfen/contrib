@@ -52,16 +52,17 @@ var (
 	ErrOrmMatchNone                   = &Error{49, "match none", "contrib", nil}                                                    // 数据库找不到对象
 	ErrOrmMatchMultiple               = &Error{50, "match multiple", "contrib", nil}                                                // 期望搜到一条记录，但是返回多条
 	// ErrParamInvalid                   = &Error{129, "params invalid {{.var1}}", "contrib", nil}                                     // 参数非法 {{.var1}}
-	ErrSessionExpired   = &Error{52, "session expired", "contrib", nil}                             // 会话已过期
-	ErrTokenExpired     = &Error{52, "token expired", "contrib", nil}                               // 身份令牌已过期
-	ErrPlaceHolder      = &Error{53, "error placeholder", "contrib", nil}                           // 错误的错误
-	ErrConfigInvalid    = &Error{54, "config file empty or invalid", "contrib", nil}                // 配置文件非法或不完整
-	ErrRbacInherCircle  = &Error{55, "RBAC roles Inher circle {{.var1}} {{.var2}}", "contrib", nil} // 角色继承循环 {{.var1}} {{.var2}}
-	ErrUuidFormat       = &Error{56, "uuid format invalid {{.var1}}", "contrib", nil}               // uuid 格式错误 {{.var1}}
-	ErrApiKeyInvalid    = &Error{57, "API KEY invalid", "contrib", nil}                             // 接口密钥错误
-	ErrLengthOutOfRange = &Error{58, "length out of range {{.var1}}", "contrib", nil}               // 长度超出范围 {{.var1}}
-	ErrParamIllegal     = &Error{59, "param illegal", "contrib", nil}
-	ErrPasswordFormat   = &Error{60, "password format invalid ", "contrib", nil}
+	ErrSessionExpired                 = &Error{52, "session expired", "contrib", nil}                             // 会话已过期
+	ErrTokenExpired                   = &Error{52, "token expired", "contrib", nil}                               // 身份令牌已过期
+	ErrPlaceHolder                    = &Error{53, "error placeholder", "contrib", nil}                           // 错误的错误
+	ErrConfigInvalid                  = &Error{54, "config file empty or invalid", "contrib", nil}                // 配置文件非法或不完整
+	ErrRbacInherCircle                = &Error{55, "RBAC roles Inher circle {{.var1}} {{.var2}}", "contrib", nil} // 角色继承循环 {{.var1}} {{.var2}}
+	ErrUuidFormat                     = &Error{56, "uuid format invalid {{.var1}}", "contrib", nil}               // uuid 格式错误 {{.var1}}
+	ErrApiKeyInvalid                  = &Error{57, "API KEY invalid", "contrib", nil}                             // 接口密钥错误
+	ErrLengthOutOfRange               = &Error{58, "length out of range {{.var1}}", "contrib", nil}               // 长度超出范围 {{.var1}}
+	ErrParamIllegal                   = &Error{59, "param illegal", "contrib", nil}
+	ErrPasswordFormat                 = &Error{60, "password format invalid ", "contrib", nil}
+	ErrTokenReqHeaderOrFormKeyInvalid = &Error{61, "request header key or form key invalid by token", "contrib", nil}
 )
 
 // Error translate
