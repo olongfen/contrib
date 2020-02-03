@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/srlemon/contrib/log"
+	"github.com/olefen/contrib/log"
 )
 
 func main() {

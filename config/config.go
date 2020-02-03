@@ -8,7 +8,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/srlemon/contrib/log"
+	"github.com/olefen/contrib/log"
 
 	"gopkg.in/yaml.v2"
 )

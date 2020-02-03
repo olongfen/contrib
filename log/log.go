@@ -2,8 +2,8 @@ package log
 
 import (
 	"github.com/lestrrat-go/file-rotatelogs"
+	"github.com/olefen/contrib"
 	"github.com/sirupsen/logrus"
-	"github.com/srlemon/contrib"
 
 	"fmt"
 	"io"

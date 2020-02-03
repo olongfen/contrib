@@ -1,4 +1,4 @@
-module github.com/srlemon/contrib
+module github.com/olefen/contrib
 
 go 1.13
 

@@ -1,7 +1,7 @@
 package session
 
 import (
-	project "github.com/srlemon/contrib"
+	project "github.com/olefen/contrib"
 
 	"time"
 )
