@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/olefen/contrib/config"
+	"github.com/olongfen/contrib/config"
 )
 
 var a = &c{

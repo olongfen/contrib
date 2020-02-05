@@ -2,7 +2,7 @@ package log
 
 import (
 	"github.com/lestrrat-go/file-rotatelogs"
-	"github.com/olefen/contrib"
+	"github.com/olongfen/contrib"
 	"github.com/sirupsen/logrus"
 
 	"fmt"

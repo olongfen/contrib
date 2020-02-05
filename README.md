@@ -1,8 +1,8 @@
-# go-contrib  [![GoDoc](https://godoc.org/github.com/olefen/contrib?status.svg)](https://godoc.org/github.com/olefen/contrib)
+# go-contrib  [![GoDoc](https://godoc.org/github.com/olongfen/contrib?status.svg)](https://godoc.org/github.com/olongfen/contrib)
  a some middleware of glang frame
  
 # Install
-` go get github.com/olefen/contrib`
+` go get github.com/olongfen/contrib`
  
 # USAGE
 
@@ -14,7 +14,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/olefen/contrib/config"
+	"github.com/olongfen/contrib/config"
 )
 
 var a = &c{
@@ -66,7 +66,7 @@ type c struct {
 ```golang
  package main
 
-import "github.com/olefen/contrib/log"
+import "github.com/olongfen/contrib/log"
 
 func main() {
 	l := log.NewLogFile("demo.log")

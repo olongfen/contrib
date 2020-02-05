@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/olefen/contrib/log"
+	"github.com/olongfen/contrib/log"
 )
 
 func main() {
