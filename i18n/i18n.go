@@ -106,7 +106,7 @@ func (m *I18nMap) ParseJSON(raw []byte) (ret1 int, ret2 int, err error) {
 		if len(model) == 0 || code < 0 {
 			continue
 		}
-		key = fmt.Sprintf(`%s%d`, model, code)
+		key = fmt.Sprintf(`prefix: %s,code: %d`, model, code)
 
 		// 多语言模版
 		for _k, _v0 := range v {
@@ -238,7 +238,7 @@ func (m *I18nMap) LoadDir(dirs ...string) (numKey int, err error) {
 // GetError 翻译错误
 func (m *I18nMap) GetError(err I18nError, lang string) (ret string) {
 	var (
-		key  = fmt.Sprintf(`%s%d`, err.GetPrefix(), err.GetCode())
+		key  = fmt.Sprintf(`prefix: %s,code: %d`, err.GetPrefix(), err.GetCode())
 		vars = err.GetVarsBy(lang) // 优先取多语言变量
 		txt  = err.GetDetail()
 		tpl  = m.getTemplate(key, m.ParseLang(lang), len(vars), txt)
@@ -262,7 +262,7 @@ func (m *I18nMap) GetError(err I18nError, lang string) (ret string) {
 		}
 	}
 
-	ret = strings.Trim(key+"|"+txt, " ")
+	ret = strings.TrimSpace(key + "," + txt)
 	return
 }
 
