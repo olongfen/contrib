@@ -20,18 +20,11 @@ func JSONMarshalMust(v interface{}) (ret []byte) {
 	return
 }
 
-// ModelBase
-type ModelBase struct {
-	ID         uint `gorm:"primary_key；AUTO_INCREMENT"`
-	CreateTime time.Time
-	UpdateTime time.Time
-	DeleteTime *time.Time `sql:"index"`
-}
-
+// TimeData 时间信息
 type TimeData struct {
-	CreateTime time.Time
-	UpdateTime time.Time
-	DeleteTime *time.Time `sql:"index"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time `sql:"index"`
 }
 
 // PubGetEnvString
