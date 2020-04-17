@@ -18,7 +18,7 @@ import (
 // Config
 type Config struct {
 	sync.RWMutex
-	MonitorTime time.Duration
+	monitorTime time.Duration
 	lastModify  time.Time
 	pathYaml    *string           // yaml配置文件保存地址
 	savePoint   interface{}       //
@@ -29,11 +29,19 @@ type Config struct {
 type InterfaceConfig interface {
 	SetSavePath(savePath string) (err error)
 	SetSavePoint(saveTarget interface{}) (err error)
+	SetMonitorTime(duration time.Duration)
 	Save(newConf interface{}) error
 }
 
+func (c *Config)SetMonitorTime(duration time.Duration)  {
+	if duration == 0 {
+		c.monitorTime = time.Millisecond * 500
+	}else {
+		c.monitorTime = duration
+	}
+}
 // LoadConfigAndSave
-func LoadConfigAndSave(configPath string, targetConfig InterfaceConfig, defaultConfig InterfaceConfig) (err error) {
+func LoadConfigAndSave(configPath string, targetConfig InterfaceConfig, defaultConfig InterfaceConfig,duration time.Duration) (err error) {
 	var (
 		data     []byte
 		fileInfo os.FileInfo
@@ -79,6 +87,7 @@ func LoadConfigAndSave(configPath string, targetConfig InterfaceConfig, defaultC
 		if err = _c.Save(defaultConfig); err != nil {
 			return
 		}
+		_c.SetMonitorTime(duration)
 	}
 
 	return
@@ -147,10 +156,7 @@ func (c *Config) change() (err error) {
 
 // MonitorChange 监听配置文件
 func (c *Config) MonitorChange() {
-	if c.MonitorTime == 0 {
-		c.MonitorTime = time.Millisecond * 500
-	}
-	ticker := time.NewTicker(c.MonitorTime)
+	ticker := time.NewTicker(c.monitorTime)
 	for range ticker.C {
 		func() {
 			fileInfo, err := os.Stat(*c.pathYaml)
