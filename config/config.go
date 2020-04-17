@@ -31,6 +31,7 @@ type InterfaceConfig interface {
 	SetSavePoint(saveTarget interface{}) (err error)
 	SetMonitorTime(duration time.Duration)
 	Save(newConf interface{}) error
+	MonitorChange()
 }
 
 func (c *Config)SetMonitorTime(duration time.Duration)  {
@@ -88,6 +89,15 @@ func LoadConfigAndSave(configPath string, targetConfig InterfaceConfig, defaultC
 			return
 		}
 		_c.SetMonitorTime(duration)
+		go func() {
+			wg := sync.WaitGroup{}
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				_c.MonitorChange()
+			}()
+			wg.Wait()
+		}()
 	}
 
 	return

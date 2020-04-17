@@ -19,10 +19,9 @@ var a = &c{
 func main() {
 
 	var err error
-	if err = config.LoadConfigAndSave("test.yml", a, a); err != nil {
+	if err = config.LoadConfigAndSave("test.yml", a, a,0); err != nil {
 		panic(err)
 	}
-	go a.MonitorChange()
 	r := gin.Default()
 	r.GET("/", getConfig)
 	r.Run("0.0.0.0:1563")
