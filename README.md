@@ -6,7 +6,7 @@
  
 # USAGE
 
-- config
+- config 一个可以热加载yaml配置文件的配置管理
  
  ```golang 
    
@@ -23,18 +23,18 @@ var a = &c{
 		Name string
 		Age  int
 	}{Name: "张三", Age: 19},
+	Data: map[string]interface{}{
+		"name": "sdsd",
+	},
 }
 
 func main() {
 
 	var err error
-	if err = config.LoadConfiguration("test.yml", a, a); err != nil {
+	if err = config.LoadConfigAndSave("test.yml", a, a); err != nil {
 		panic(err)
 	}
-	if err = a.Save(nil); err != nil {
-		panic(err)
-	}
-
+	go a.MonitorChange()
 	r := gin.Default()
 	r.GET("/", getConfig)
 	r.Run("0.0.0.0:1563")
@@ -42,12 +42,6 @@ func main() {
 }
 
 func getConfig(ctx *gin.Context) {
-	if err := config.LoadConfiguration("test.yml", a, a); err != nil {
-		ctx.AbortWithStatusJSON(404, gin.H{
-			"msg": err,
-		})
-		return
-	}
 	ctx.AbortWithStatusJSON(200, a)
 	return
 }
@@ -59,10 +53,12 @@ type c struct {
 		Name string
 		Age  int
 	} `yaml:"用户"`
+	Data map[string]interface{}
 }
+
   ```
   
-- log
+- log 日志管理，设置日志等级
 ```golang
  package main
 
