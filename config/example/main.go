@@ -19,12 +19,10 @@ var a = &c{
 func main() {
 
 	var err error
-	if err = config.LoadConfiguration("test.yml", a, a); err != nil {
+	if err = config.LoadConfigAndSave("test.yml", a, a); err != nil {
 		panic(err)
 	}
-	if err = a.Save(nil); err != nil {
-		panic(err)
-	}
+	go a.MonitorChange()
 	r := gin.Default()
 	r.GET("/", getConfig)
 	r.Run("0.0.0.0:1563")
@@ -32,12 +30,6 @@ func main() {
 }
 
 func getConfig(ctx *gin.Context) {
-	if err := config.LoadConfiguration("test.yml", a, a); err != nil {
-		ctx.AbortWithStatusJSON(404, gin.H{
-			"msg": err,
-		})
-		return
-	}
 	ctx.AbortWithStatusJSON(200, a)
 	return
 }
