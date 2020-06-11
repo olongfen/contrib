@@ -1,61 +1,47 @@
 package session
 
 import (
+	"crypto/ecdsa"
 	middle "github.com/olongfen/contrib"
+	"io/ioutil"
 
 	"github.com/dgrijalva/jwt-go"
 
 	"crypto/rsa"
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"net/http"
 )
 
-var (
-	// 默认值:RSA 钥匙对
-	defaultRSAPrivateKeyPEM = []byte(`-----BEGIN RSA PRIVATE KEY-----
-MIICXQIBAAKBgQDfMTvSG82J89CuPb0SyH5Uu4l80WJYnWAZdbYzt5h6Z5MEY0Dw
-3EIMvAceobGu/3RWOUc7H+tNb/4EhILbKokzdva0kjF56l7SWprxXu0zvkMfhtbh
-HX8S3Z5Oi3o3Or8eftzDgUP+hKVMgUmzhJG/ONpSnIB2zs9KIFr1fp+glwIDAQAB
-AoGACLHJS8kLe7lEwtTi3a1zxmc71uHtO9h9muBMBb28MeCBCKW5LOjXpdlZSacw
-3clTxdwbW0FGEFExiwmCc3k3uPfgvSoguWlx4envHTuTmI7NqZCBySLHA3Voym1R
-A7b/86nfs8igRCKhlZzX58QnzgRVPHP1NNMi2Ob2/kpCKdkCQQDlW/XElHBf1z8w
-/lwf3xr2dJozM+690Vifs+4MGjqH7QL2PRRTghzJG9KJg73f8TWvQrXJL3Eh8JA1
-iO54UYPtAkEA+R3mUxbqo8ToHPlrkDGuP9AWm2XQubW5zGFRi8PBvGFVNXW0KNbD
-Qm8Uco6lt+w6G0Pntfhmzn6o47YgKw9uEwJAZ2mQJWM8S6o0XrXA+cnRUV//iqiW
-s1UpnVA2O5Sz4Ud292lQudpHelGmGsSgntEWAICWkDBo1QGvM8QaqXsvfQJBANDE
-d+MmD1lTiNnPRI9AszCTKH7uYm9fledrnzUrxk4im5ADpgmbgWNJR6+BT+vEsiVr
-UOG03CMtDkhWtrqfYbUCQQDX0fRwnWtgf3DT3dyMV3UOTvidSmx7iTpMNlpBLe/l
-TGF0FeZcdNYeJdfwDgxgNL3rYQ9PGR8H89dEDC4eRlj4
------END RSA PRIVATE KEY-----`)
-	defaultRSAPublicKeyPEM = []byte(`-----BEGIN PUBLIC KEY-----
-MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDfMTvSG82J89CuPb0SyH5Uu4l8
-0WJYnWAZdbYzt5h6Z5MEY0Dw3EIMvAceobGu/3RWOUc7H+tNb/4EhILbKokzdva0
-kjF56l7SWprxXu0zvkMfhtbhHX8S3Z5Oi3o3Or8eftzDgUP+hKVMgUmzhJG/ONpS
-nIB2zs9KIFr1fp+glwIDAQAB
------END PUBLIC KEY-----`)
-	// 默认值:HMAC密钥
-	defaultHmacSecret = []byte("sample hmac secret key")
-)
-
-// 密钥实例
+// Key 密钥实例
 type Key struct {
-	RSAPrivateKeyPEM []byte // 私钥
-	RSAPublicKeyPEM  []byte // 公钥
-	HmacSecret       []byte // HMAC密钥
-	DefaultMethod    string // 默认加密方法
+	encryptMethod string // 默认加密方法
 	// hook
-	HookSessionCheck func(session *Session) error  // 二次检测session合法性
-	HookTokenCheck   func(token interface{}) error // 二次检测token合法性
-	// other
+	hookSessionCheck func(session *Session) error  // 二次检测session合法性
+	hookTokenCheck   func(token interface{}) error // 二次检测token合法性
+	// encrypt rsa
 	rsaPrivateKey *rsa.PrivateKey
 	rsaPublicKey  *rsa.PublicKey
+	// encrypt hmac
+	hmacSecret []byte // HMAC密钥
+	// encrypt ecdsa
+	ecdsaPrivateKey *ecdsa.PrivateKey
+	ecdsaPublicKey  *ecdsa.PublicKey
 }
 
-// 解析出session
-func (d *Key) SessionDecodeAuto(inf interface{}) (ret *Session, err error) {
-	if d == nil {
+// SetHookSessionCheck 二次检测session合法性
+func (k *Key) SetHookSessionCheck(f func(session *Session) error) {
+	k.hookSessionCheck = f
+}
+
+// SetHookTokenCheck 二次检测token合法性
+func (k *Key) SetHookTokenCheck(f func(token interface{}) error) {
+	k.hookTokenCheck = f
+}
+
+// SessionDecode 解析出session
+func (k *Key) SessionDecode(inf interface{}) (ret *Session, err error) {
+	if k == nil {
 		err = middle.ErrSessionKeyUndefined
 		return
 	}
@@ -65,7 +51,7 @@ func (d *Key) SessionDecodeAuto(inf interface{}) (ret *Session, err error) {
 	//if val, err = SessionDecode(inf); err != nil {
 	//	return
 	//}
-	if val, err = d.TokenDecode(inf); err != nil {
+	if val, err = k.TokenDecode(inf); err != nil {
 		return
 	}
 
@@ -125,20 +111,17 @@ func (d *Key) SessionDecodeAuto(inf interface{}) (ret *Session, err error) {
 	if err = ret.Valid(); err != nil {
 		return
 	}
-	if d.HookSessionCheck != nil {
-		if err = d.HookSessionCheck(ret); err != nil {
+	if k.hookSessionCheck != nil {
+		if err = k.hookSessionCheck(ret); err != nil {
 			return
 		}
 	}
 	return
 }
 
-// 将session编码为token
-func (d *Key) SessionEncodeAuto(s *Session) (token string, err error) {
-	if d == nil {
-		err = middle.ErrSessionKeyUndefined
-		return
-	}
+// SessionEncode 将session编码为token
+func (k *Key) SessionEncode(s *Session) (token string, err error) {
+
 	if s == nil {
 		err = middle.ErrSessionUndefined
 		return
@@ -178,126 +161,112 @@ func (d *Key) SessionEncodeAuto(s *Session) (token string, err error) {
 		m[TokenTagId] = s.ID
 	}
 
-	token, err = d.TokenEncode(m, d.DefaultMethod) // 默认加密
+	token, err = k.TokenEncode(m) // 默认加密
 	return
 }
 
-// 解析出需要的值
-func (d *Key) TokenDecode(inf interface{}) (ret map[string]interface{}, err error) {
-	if d == nil {
+// TokenDecode 解析出需要的值
+func (k *Key) TokenDecode(inf interface{}) (ret map[string]interface{}, err error) {
+	if k == nil {
 		err = middle.ErrSessionKeyUndefined
 		return
 	}
 	switch v := inf.(type) {
 	case string:
-		ret, err = d.tokenParse(v)
+		ret, err = k.tokenParse(v)
 		break
 	case []byte:
-		ret, err = d.tokenParse(string(v))
+		ret, err = k.tokenParse(string(v))
 		break
 	case json.RawMessage:
-		ret, err = d.tokenParse(string(v))
+		ret, err = k.tokenParse(string(v))
 		break
 	case *http.Request:
 		var token string
 		if token, err = PubGetTokenFromReq(v); err != nil {
 			return
 		}
-		ret, err = d.tokenParse(token)
+		ret, err = k.tokenParse(token)
 		break
 	default:
 		err = middle.ErrTokenParseTypeNotSupport
 		break
 	}
-	if err == nil && d.HookTokenCheck != nil {
-		if err = d.HookTokenCheck(inf); err != nil {
+
+	// 执行hook函数
+	if err == nil && k.hookTokenCheck != nil {
+		if err = k.hookTokenCheck(inf); err != nil {
 			return
 		}
 	}
 	return
 }
 
-// 将值编码为token
-func (d *Key) TokenEncode(val map[string]interface{}, method string) (token string, err error) {
-	if d == nil {
-		err = middle.ErrSessionKeyUndefined
-		return
-	}
-	if val == nil {
-		err = middle.ErrTokenClaimsInvalid
-		return
-	}
-
-	switch method {
-	case EncodeRsa:
-		token, err = d.tokenEncodeRsa(val)
-		break
-	case EncodeHmac:
-		token, err = d.tokenEncodeHmac(val)
-		break
-	default:
-		err = middle.ErrTokenParseSignMethodNotSupport
-		break
-	}
-	return
-}
-
-// 将值编码为token
-func (d *Key) TokenEncodeAuto(val map[string]interface{}) (token string, err error) {
-	return d.TokenEncode(val, d.DefaultMethod)
-}
-
-// 取值的token的sha256
-func (d *Key) TokenHashSha256(val map[string]interface{}) (sign string, err error) {
+// SetRSA 设置RSA密钥对
+func (k *Key) SetRSA(priPath, pubPath string) (err error) {
 	var (
-		token string
+		priPem []byte
+		pubPem []byte
 	)
-	if token, err = d.TokenEncodeAuto(val); err != nil {
+	if priPem, err = ioutil.ReadFile(priPath); err != nil {
 		return
 	}
-	sign = fmt.Sprintf("%x", sha256.Sum256([]byte(token)))
+	if pubPem, err = ioutil.ReadFile(pubPath); err != nil {
+		return
+	}
+	if k.rsaPrivateKey, err = jwt.ParseRSAPrivateKeyFromPEM(priPem); err != nil {
+		return
+	}
+
+	if k.rsaPublicKey, err = jwt.ParseRSAPublicKeyFromPEM(pubPem); err != nil {
+		return
+	}
 	return
 }
 
-// 设置RSA密钥对
-func (d *Key) SetRSA(priPem []byte, pubPem []byte) (err error) {
-	if d == nil {
-		err = middle.ErrSessionKeyUndefined
+// SetHmac 设置HMAC密钥
+func (k *Key) SetHmac(hmacKeyPath string) (err error) {
+	var (
+		hmacKey []byte
+	)
+	if hmacKey, err = ioutil.ReadFile(hmacKeyPath); err != nil {
 		return
 	}
-	d.RSAPrivateKeyPEM = priPem
-	d.RSAPublicKeyPEM = pubPem
-	if err = d.Init(); err != nil {
-		return
-	}
-	d.DefaultMethod = EncodeRsa
+	k.hmacSecret = hmacKey
+
 	return
 }
 
-// 设置HMAC密钥
-func (d *Key) SetHmac(hmacPri []byte) (err error) {
-	if d == nil {
-		err = middle.ErrSessionKeyUndefined
+// SetECDSA 设这ECDSA
+func (k *Key) SetECDSA(priPath, pubPath string) (err error) {
+	var (
+		priPem []byte
+		pubPem []byte
+	)
+	if priPem, err = ioutil.ReadFile(priPath); err != nil {
 		return
 	}
-	d.HmacSecret = hmacPri
-	if err = d.Init(); err != nil {
-		panic(err)
+	if pubPem, err = ioutil.ReadFile(pubPath); err != nil {
+		return
 	}
-	d.DefaultMethod = EncodeHmac
+	if k.ecdsaPrivateKey, err = jwt.ParseECPrivateKeyFromPEM(priPem); err != nil {
+		return
+	}
+
+	if k.ecdsaPublicKey, err = jwt.ParseECPublicKeyFromPEM(pubPem); err != nil {
+		return
+	}
 	return
 }
 
-// 解析出token中的值
-func (d *Key) tokenParse(tokenStr string) (ret map[string]interface{}, err error) {
+// tokenParse 解析出token中的值
+func (k *Key) tokenParse(tokenStr string) (ret map[string]interface{}, err error) {
 	var (
 		token *jwt.Token
 	)
 
 	// 解析token
-	if token, err = jwt.Parse(tokenStr, d.parseKey); err != nil {
-		// 重定向错误
-		err = middle.ErrTokenInvalid.SetVars("crypto/rsa")
+	if token, err = jwt.Parse(tokenStr, k.parseKey); err != nil {
 		return
 	} else if token.Valid == false {
 		err = middle.ErrTokenInvalid
@@ -305,11 +274,11 @@ func (d *Key) tokenParse(tokenStr string) (ret map[string]interface{}, err error
 	}
 
 	// 解析map
-	if claims, ok := token.Claims.(jwt.MapClaims); ok == true {
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
 		//// 解析合法性
-		//if err = claims.Valid(); err != nil {
-		//	return
-		//}
+		if err = claims.Valid(); err != nil {
+			return
+		}
 		ret = map[string]interface{}(claims)
 	} else {
 		err = middle.ErrTokenClaimsInvalid
@@ -319,29 +288,46 @@ func (d *Key) tokenParse(tokenStr string) (ret map[string]interface{}, err error
 	return
 }
 
-// 将map转为rsa的token
-func (d *Key) tokenEncodeRsa(val map[string]interface{}) (tokenStr string, err error) {
-	tokenStr, err = jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims(val)).SignedString(d.rsaPrivateKey)
+// TokenEncode 将map转为加密的token
+func (k *Key) TokenEncode(val map[string]interface{}) (tokenStr string, err error) {
+	switch k.encryptMethod {
+	case "RS256":
+		tokenStr, err = jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims(val)).SignedString(k.rsaPrivateKey)
+	case "RS384":
+		tokenStr, err = jwt.NewWithClaims(jwt.SigningMethodRS384, jwt.MapClaims(val)).SignedString(k.rsaPrivateKey)
+	case "RS512":
+		tokenStr, err = jwt.NewWithClaims(jwt.SigningMethodRS512, jwt.MapClaims(val)).SignedString(k.rsaPrivateKey)
+	case "HS256":
+		tokenStr, err = jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims(val)).SignedString(k.hmacSecret)
+	case "HS384":
+		tokenStr, err = jwt.NewWithClaims(jwt.SigningMethodES384, jwt.MapClaims(val)).SignedString(k.hmacSecret)
+	case "HS512":
+		tokenStr, err = jwt.NewWithClaims(jwt.SigningMethodES512, jwt.MapClaims(val)).SignedString(k.hmacSecret)
+	case "ES256":
+		tokenStr, err = jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims(val)).SignedString(k.ecdsaPrivateKey)
+	case "ES384":
+		tokenStr, err = jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims(val)).SignedString(k.ecdsaPrivateKey)
+	case "ES512":
+		tokenStr, err = jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims(val)).SignedString(k.ecdsaPrivateKey)
+	default:
+		err = fmt.Errorf("encrypt method %s not exist", k.encryptMethod)
+		return
+	}
+
 	return
 }
 
-// 将map转为hmac的token
-func (d *Key) tokenEncodeHmac(val map[string]interface{}) (tokenStr string, err error) {
-	tokenStr, err = jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims(val)).SignedString(d.HmacSecret)
-	return
-}
-
-// 按类型取出密钥
-func (d *Key) parseKey(token *jwt.Token) (key interface{}, err error) {
+// parseKey 按类型取出密钥
+func (k *Key) parseKey(token *jwt.Token) (ret interface{}, err error) {
 	switch token.Method.(type) {
 	case *jwt.SigningMethodRSA:
 		// RSA
-		key = d.rsaPublicKey
-		break
+		ret = k.rsaPublicKey
 	case *jwt.SigningMethodHMAC:
 		// HMAC
-		key = d.HmacSecret
-		break
+		ret = k.hmacSecret
+	case *jwt.SigningMethodECDSA:
+		ret = k.ecdsaPublicKey
 	default:
 		err = fmt.Errorf("%s '%v'", middle.ErrTokenParseSignMethodNotSupport.Error(), token.Header["alg"])
 		break
@@ -349,59 +335,9 @@ func (d *Key) parseKey(token *jwt.Token) (key interface{}, err error) {
 	return
 }
 
-// init
-func (d *Key) Init() (err error) {
-	if d == nil {
-		err = middle.ErrSessionKeyUndefined
-		return
-	}
-
-	// default method
-	if len(d.DefaultMethod) == 0 {
-		d.DefaultMethod = CfgDefaultMethod
-	}
-
-	// rsa: default
-	if (len(d.RSAPrivateKeyPEM) == 0) && (len(d.RSAPublicKeyPEM) == 0) {
-		d.RSAPrivateKeyPEM = defaultRSAPrivateKeyPEM
-		d.RSAPublicKeyPEM = defaultRSAPublicKeyPEM
-	}
-
-	// rsa instance/replace
-	if len(d.RSAPrivateKeyPEM) > 0 {
-		if d.rsaPrivateKey, err = jwt.ParseRSAPrivateKeyFromPEM(d.RSAPrivateKeyPEM); err != nil {
-			return
-		}
-	}
-	if len(d.RSAPublicKeyPEM) > 0 {
-		if d.rsaPublicKey, err = jwt.ParseRSAPublicKeyFromPEM(d.RSAPublicKeyPEM); err != nil {
-			return
-		}
-	}
-
-	//// hmmc: default
-	//if len(d.HmacSecret) == 0 {
-	//	d.HmacSecret = defaultHmacSecret
-	//}
-
-	return
-}
-
-// new key
-func NewKey(in *Key) (d *Key, err error) {
-	if in != nil {
-		d = in
-	} else {
-		d = new(Key)
-	}
-	err = d.Init()
-	return
-}
-
-// init
-func InitKey() (err error) {
-	if KeyDefault, err = NewKey(KeyDefault); err != nil {
-		return
-	}
-	return
+// NewKey new Key
+func NewKey(encryptMethod string) *Key {
+	d := new(Key)
+	d.encryptMethod = encryptMethod
+	return d
 }

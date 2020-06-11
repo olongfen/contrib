@@ -7,8 +7,6 @@ import (
 )
 
 const (
-	EncodeRsa  = "rsa"
-	EncodeHmac = "hmac"
 	// 会话级别
 	SessionLevelNormal = ""       // 默认会话
 	SessionLevelSecure = "secure" // 安全会话
@@ -31,9 +29,6 @@ var (
 	SessionExpMaxNormal = time.Hour * 24 * 365 // 普通会话最长一年
 	SessionExpMaxLong   = time.Hour * 24 * 365 // 超长会话最长一年
 	SessionExpMaxSecure = time.Hour * 24       // 安全会话最长一天
-	//
-	CfgDefaultMethod = EncodeRsa // 默认加密方法
-	KeyDefault       *Key        // 默认key实例
 )
 
 const (
@@ -70,70 +65,6 @@ type Session struct {
 	CacheToken interface{} `json:"-"` //
 }
 
-// 解析出session
-func SessionDecodeAuto(inf interface{}) (ret *Session, err error) {
-	if KeyDefault == nil {
-		err = project.ErrSessionKeyDefaultUndefined
-		return
-	}
-	ret, err = KeyDefault.SessionDecodeAuto(inf)
-	return
-}
-
-// 将session编码为token
-func SessionEncodeAuto(s *Session) (token string, err error) {
-	if KeyDefault == nil {
-		err = project.ErrSessionKeyDefaultUndefined
-		return
-	}
-	token, err = KeyDefault.SessionEncodeAuto(s)
-	return
-}
-
-// 解析出需要的值
-func SessionDecode(inf interface{}) (ret map[string]interface{}, err error) {
-	if KeyDefault == nil {
-		err = project.ErrSessionKeyDefaultUndefined
-		return
-	}
-	ret, err = KeyDefault.TokenDecode(inf)
-	return
-}
-
-// 将值编码为token
-func SessionEncode(val map[string]interface{}, method string) (token string, err error) {
-	if KeyDefault == nil {
-		err = project.ErrSessionKeyDefaultUndefined
-		return
-	}
-	token, err = KeyDefault.TokenEncode(val, method)
-	return
-}
-
-// 设置RSA密钥对
-func SessionSetRSA(priPem []byte, pubPem []byte) (err error) {
-	if KeyDefault == nil {
-		err = project.ErrSessionKeyDefaultUndefined
-		return
-	}
-	if err = KeyDefault.SetRSA(priPem, pubPem); err != nil {
-		panic(err)
-	}
-	return
-}
-
-// 设置HMAC密钥
-func SessionSetHmac(hmacPri []byte) (err error) {
-	if KeyDefault == nil {
-		err = project.ErrSessionKeyDefaultUndefined
-		return
-	}
-	if err = KeyDefault.SetHmac(hmacPri); err != nil {
-		panic(err)
-	}
-	return
-}
-
 // **
 func (s *Session) Valid() (err error) {
 
@@ -153,13 +84,13 @@ func (s *Session) Valid() (err error) {
 	var now_ = time.Now()
 	switch s.Level {
 	case SessionLevelNormal:
-		if s.ExpireTime > now_.Add(SessionExpMaxNormal).Unix() {
+		if s.ExpireTime > now_.Add(SessionExpMaxNormal).UnixNano() {
 			err = project.ErrSessionExpMaxOutOfRange
 			return
 		}
 		break
 	case SessionLevelSecure:
-		if s.ExpireTime > now_.Add(SessionExpMaxSecure).Unix() {
+		if s.ExpireTime > now_.Add(SessionExpMaxSecure).UnixNano() {
 			err = project.ErrSessionExpMaxOutOfRange
 			return
 		}
@@ -170,11 +101,4 @@ func (s *Session) Valid() (err error) {
 	}
 
 	return
-}
-
-func init() {
-	// key
-	if err := InitKey(); err != nil {
-		panic(err)
-	}
 }

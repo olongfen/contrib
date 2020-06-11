@@ -1,14 +1,25 @@
 package log
 
 import (
+	"fmt"
 	"testing"
 )
 
+var (
+	l     = NewLogFile("./test",false)
+)
+
 func Test_File(t *testing.T) {
-	var (
-		l     = NewLogFile("./test")
-		l1, _ = NewLog(l)
-	)
-	l1.Infof("ha ha")
-	l1.Errorf("la la")
+
+	l.Infof("ha ha")
+	l.Errorf("la la")
 }
+
+func TestPanicRecover(t *testing.T) {
+	var(
+		a =[]int{}
+	)
+	defer PanicRecover(l)
+	fmt.Println(a[1])
+}
+
