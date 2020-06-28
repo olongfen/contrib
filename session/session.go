@@ -83,7 +83,7 @@ type Session struct {
 	CacheToken interface{} `json:"-"` //
 }
 
-// NewSession
+// NewSession 可以实现一个用户一个密钥对
 func NewSession(p Params) *Session {
 	if len(p.EncryptMethod) == 0 {
 		panic("encrypt method not set")

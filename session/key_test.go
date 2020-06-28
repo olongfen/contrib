@@ -5,50 +5,49 @@ import (
 )
 
 var (
-	methods = []string{"RS256", "ES256", "HS256"}
-	se      *Session
-	token   string
+	methods_two = []string{"RS256", "ES256", "HS256"}
+	sess        = &Session{
+		ExpireTime: int64(TokenExpNormal),
+		UID:        "1222222222222222",
+		Password:   "123456",
+		Level:      SessionLevelNormal,
+	}
+	key *Key
 )
 
-func TestNewSession(t *testing.T) {
-	se = NewSession(Params{
-		ExpireTime:    int64(TokenExpNormal),
-		UID:           "1222222222222222",
-		Password:      "123456",
-		Level:         SessionLevelNormal,
-		EncryptMethod: "RS256",
-	})
+func TestNewKey(t *testing.T) {
+	key = NewKey("RS256")
 }
 
-func Test_SessionEncode_SessionDecode(t *testing.T) {
+func TestKey_SessionEncode_SessionDecode(t *testing.T) {
 	var (
 		err error
 	)
 	for _, v := range methods {
 		switch v {
 		case "RS256":
-			se.Key = NewKey(v)
-			if err = se.SetRSA("./testfile/rsa256-private.pem", "./testfile/rsa256-public.pem"); err != nil {
+			key = NewKey("RS256")
+			if err = key.SetRSA("./testfile/rsa256-private.pem", "./testfile/rsa256-public.pem"); err != nil {
 				t.Fatal(err)
 			}
-			if token, err = se.SessionEncode(se); err != nil {
+			if token, err = key.SessionEncode(sess); err != nil {
 				t.Fatal(err)
 			}
 			t.Log(token)
 			var (
 				s *Session
 			)
-			if s, err = se.SessionDecode(token); err != nil {
+			if s, err = key.SessionDecode(token); err != nil {
 				t.Fatal(err)
 			}
 			t.Log(s)
 		case "ES256":
-			key := NewKey("ES256")
+			key = NewKey("ES256")
 			token := ""
 			if err = key.SetECDSA("./testfile/ec256-private.pem", "./testfile/ec256-public.pem"); err != nil {
 				t.Fatal(err)
 			}
-			if token, err = key.SessionEncode(se); err != nil {
+			if token, err = key.SessionEncode(sess); err != nil {
 				t.Fatal(err)
 			}
 			t.Log(token)
@@ -65,7 +64,7 @@ func Test_SessionEncode_SessionDecode(t *testing.T) {
 			if err = key.SetHmac("./testfile/hmacTestKey"); err != nil {
 				t.Fatal(err)
 			}
-			if token, err = key.SessionEncode(se); err != nil {
+			if token, err = key.SessionEncode(sess); err != nil {
 				t.Fatal(err)
 			}
 			t.Log(token)

@@ -343,7 +343,7 @@ func (k *Key) parseKey(token *jwt.Token) (ret interface{}, err error) {
 	return
 }
 
-// NewKey new Key
+// NewKey new Key 直接使用key可以一个密钥对多个用户一起使用
 func NewKey(encryptMethod string) *Key {
 	d := new(Key)
 	d.encryptMethod = encryptMethod
