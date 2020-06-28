@@ -22,9 +22,11 @@ const (
 
 var (
 	// 有效期
-	TokenExpNormal = time.Hour * 24     // 默认登录有效期一天
-	TokenExpLong   = time.Hour * 24 * 7 // 超长登录一周
-	TokenExpSecure = time.Minute * 30   // 默认安全会话30分钟
+	TokenExpTenMinute = time.Minute * 10
+	TokenExpHour      = time.Hour
+	TokenExpNormal    = time.Hour * 24     // 默认登录有效期一天
+	TokenExpLong      = time.Hour * 24 * 7 // 超长登录一周
+	TokenExpSecure    = time.Minute * 30   // 默认安全会话30分钟
 	// 会话最大有效期
 	SessionExpMaxNormal = time.Hour * 24 * 365 // 普通会话最长一年
 	SessionExpMaxLong   = time.Hour * 24 * 365 // 超长会话最长一年
@@ -41,28 +43,65 @@ const (
 	TokenTagIat = "iat"
 	TokenTagJti = "jti"
 	// 自定义部分
-	TokenTagCre   = "cre"   // 创建于
-	TokenTagUid   = "uid"   //
-	TokenTagLevel = "level" //
-	TokenTagPsw   = "psw"   //
-	TokenTagIp    = "ip"    //
-	TokenTagId    = "id"    //
+	TokenTagCre      = "cre"   // 创建于
+	TokenTagUid      = "uid"   //
+	TokenTagLevel    = "level" //
+	TokenTagPsw      = "psw"   //
+	TokenTagIp       = "ip"    //
+	TokenTagId       = "id"    //
+	TokenTagDeviceId = "deviceId"
 )
+
+type Params struct {
+	EncryptMethod string
+	// 逻辑属性
+	ExpireTime int64
+	UID        string
+	Level      string
+	IP         string
+	ID         int64
+	DeviceID   string
+	// 验证
+	Password string
+}
 
 // session规范
 type Session struct {
+	*Key `json:"-"`
 	// 逻辑属性
 	ExpireTime int64 `json:"expireTime,omitempty"` // 超时时间戳
 	// 内容
 	CreateTime int64  `json:"createTime,omitempty"` // 创建时间戳
-	UID        string `json:"uid,omitempty"`        // 用户uid
+	UID        string `json:"uid,omitempty"`        // 用户uid,唯一uid
 	Level      string `json:"level,omitempty"`      // 会话等级
 	IP         string `json:"ip,omitempty"`         // 登陆地址
-	ID         string `json:"id,omitempty"`         // 唯一标记/设备id
+	ID         int64  `json:"id,omitempty"`         // 唯一标记,用户id主键
+	DeviceID   string `json:"deviceId"`
 	// 验证
 	Password string `json:"password,omitempty"` // 密码哈希摘要
 	// cache
 	CacheToken interface{} `json:"-"` //
+}
+
+// NewSession
+func NewSession(p Params) *Session {
+	if len(p.EncryptMethod) == 0 {
+		panic("encrypt method not set")
+	}
+	if p.ExpireTime == 0 {
+		p.ExpireTime = int64(TokenExpNormal)
+	}
+	return &Session{
+		Key:        NewKey(p.EncryptMethod),
+		ExpireTime: p.ExpireTime,
+		CreateTime: time.Now().Unix(),
+		UID:        p.UID,
+		Level:      p.Level,
+		ID:         p.ID,
+		IP:         p.IP,
+		DeviceID:   p.DeviceID,
+		Password:   p.Password,
+	}
 }
 
 // **

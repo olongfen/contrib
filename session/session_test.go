@@ -13,6 +13,7 @@ var (
 		UID:        "1222222222222222",
 		Password:   "123456",
 		Level:      SessionLevelNormal,
+		Key:        NewKey("RS256"),
 	}
 )
 
@@ -24,18 +25,17 @@ func TestKey_SessionEncode_SessionDecode(t *testing.T) {
 		switch v {
 		case "RS256":
 			var token string
-			key := NewKey("RS256")
-			if err = key.SetRSA("./testfile/rsa256-private.pem", "./testfile/rsa256-public.pem"); err != nil {
+			if err = se.SetRSA("./testfile/rsa256-private.pem", "./testfile/rsa256-public.pem"); err != nil {
 				t.Fatal(err)
 			}
-			if token, err = key.SessionEncode(se); err != nil {
+			if token, err = se.SessionEncode(se); err != nil {
 				t.Fatal(err)
 			}
 			t.Log(token)
 			var (
 				s *Session
 			)
-			if s, err = key.SessionDecode(token); err != nil {
+			if s, err = se.SessionDecode(token); err != nil {
 				t.Fatal(err)
 			}
 			t.Log(s)

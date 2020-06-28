@@ -102,8 +102,13 @@ func (k *Key) SessionDecode(inf interface{}) (ret *Session, err error) {
 		}
 	}
 	if v, ok := val[TokenTagId]; ok == true {
-		if s, ok := v.(string); ok == true {
+		if s, ok := v.(int64); ok == true {
 			ret.ID = s
+		}
+	}
+	if v, ok := val[TokenTagDeviceId]; ok {
+		if s, _ok := v.(string); _ok {
+			ret.DeviceID = s
 		}
 	}
 
@@ -156,9 +161,12 @@ func (k *Key) SessionEncode(s *Session) (token string, err error) {
 		// ip
 		m[TokenTagIp] = s.IP
 	}
-	if len(s.ID) > 0 {
+	if s.ID > 0 {
 		// id
 		m[TokenTagId] = s.ID
+	}
+	if len(s.DeviceID) > 0 {
+		m[TokenTagDeviceId] = s.DeviceID
 	}
 
 	token, err = k.TokenEncode(m) // 默认加密
