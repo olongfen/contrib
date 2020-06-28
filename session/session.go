@@ -67,7 +67,6 @@ type Params struct {
 
 // session规范
 type Session struct {
-	*Key `json:"-"`
 	// 逻辑属性
 	ExpireTime int64 `json:"expireTime,omitempty"` // 超时时间戳
 	// 内容
@@ -81,27 +80,6 @@ type Session struct {
 	Password string `json:"password,omitempty"` // 密码哈希摘要
 	// cache
 	CacheToken interface{} `json:"-"` //
-}
-
-// NewSession 可以实现一个用户一个密钥对
-func NewSession(p Params) *Session {
-	if len(p.EncryptMethod) == 0 {
-		panic("encrypt method not set")
-	}
-	if p.ExpireTime == 0 {
-		p.ExpireTime = int64(TokenExpNormal)
-	}
-	return &Session{
-		Key:        NewKey(p.EncryptMethod),
-		ExpireTime: p.ExpireTime,
-		CreateTime: time.Now().Unix(),
-		UID:        p.UID,
-		Level:      p.Level,
-		ID:         p.ID,
-		IP:         p.IP,
-		DeviceID:   p.DeviceID,
-		Password:   p.Password,
-	}
 }
 
 // **
