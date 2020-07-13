@@ -4,7 +4,7 @@ import (
 	"fmt"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/rifflock/lfshook"
-	log"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"os"
 	"path/filepath"
@@ -13,16 +13,28 @@ import (
 	"time"
 )
 
+var (
+	Log = New()
+)
 
+type Logger struct {
+	*log.Logger
+}
+
+func New() *Logger {
+	return &Logger{
+		Logger: log.New(),
+	}
+}
 
 // NewLogFile new log file
-func NewLogFile(logPath string, isPrint bool) (d *log.Logger) {
+func NewLogFile(logPath string, isPrint bool) (d *Logger) {
 	var (
 		//f   *os.File
 		rf  *rotatelogs.RotateLogs
 		err error
 	)
-	d = log.New()
+	d = New()
 
 	// ensure director
 	_dir := filepath.Dir(logPath)
@@ -82,12 +94,10 @@ func (h *HookError) Levels() []log.Level {
 	return []log.Level{log.ErrorLevel}
 }
 
-func (h *HookError)SetFormat(logger *log.Logger,format log.Formatter)*HookError  {
+func (h *HookError) SetFormat(logger *log.Logger, format log.Formatter) *HookError {
 	logger.SetFormatter(format)
 	return h
 }
-
-
 
 // Fire fire
 func (h *HookError) Fire(entry *log.Entry) error {
@@ -111,25 +121,25 @@ func (h *HookError) Fire(entry *log.Entry) error {
 }
 
 // PanicRecover 统一处理panic
-func PanicRecover(logger *log.Logger) {
+func PanicRecover(logger *Logger) {
 	r := recover()
 	if r == nil {
 		return
 	}
 	if logger == nil {
-		logger = log.New()
+		logger = New()
 	}
 	logger.Errorf(`[panic-recover] "%s" %v`, panicIdentify(), r)
 }
 
 // PanicRecoverError 统一处理panic, 并更新error
-func PanicRecoverError(logger *log.Logger, err *error) {
+func PanicRecoverError(logger *Logger, err *error) {
 	r := recover()
 	if r == nil {
 		return
 	}
 	if logger == nil {
-		logger = log.New()
+		logger = New()
 	}
 	logger.Errorf(`[panic-recover] "%s" %v`, panicIdentify(), r)
 	return
