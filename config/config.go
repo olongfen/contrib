@@ -9,11 +9,10 @@ import (
 	"sync"
 	"time"
 
-	log"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 
 	"gopkg.in/yaml.v2"
 )
-
 
 // Config
 type Config struct {
@@ -34,15 +33,16 @@ type InterfaceConfig interface {
 	MonitorChange()
 }
 
-func (c *Config)SetMonitorTime(duration time.Duration)  {
+func (c *Config) SetMonitorTime(duration time.Duration) {
 	if duration == 0 {
 		c.monitorTime = time.Millisecond * 500
-	}else {
+	} else {
 		c.monitorTime = duration
 	}
 }
+
 // LoadConfigAndSave
-func LoadConfigAndSave(configPath string, targetConfig InterfaceConfig, defaultConfig InterfaceConfig,duration time.Duration) (err error) {
+func LoadConfigAndSave(configPath string, targetConfig InterfaceConfig, defaultConfig InterfaceConfig, duration time.Duration) (err error) {
 	var (
 		data     []byte
 		fileInfo os.FileInfo
@@ -103,7 +103,6 @@ func LoadConfigAndSave(configPath string, targetConfig InterfaceConfig, defaultC
 	return
 }
 
-
 // Save save config
 func (c *Config) Save(newConfig interface{}) (err error) {
 	c.Lock()
@@ -135,8 +134,7 @@ func (c *Config) Save(newConfig interface{}) (err error) {
 	}
 
 	log.Println(fmt.Sprintf("[Config] save Config to %s bytes:%d->%d",
-			savePath, len(readContent), len(saveContent)))
-
+		savePath, len(readContent), len(saveContent)))
 
 	return
 }
@@ -166,6 +164,9 @@ func (c *Config) change() (err error) {
 
 // MonitorChange 监听配置文件
 func (c *Config) MonitorChange() {
+	if c.monitorTime <= 0 {
+		return
+	}
 	ticker := time.NewTicker(c.monitorTime)
 	for range ticker.C {
 		func() {
