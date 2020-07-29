@@ -1,3 +1,0 @@
-{"level":"error","msg":"la la","time":"2020-07-13T09:15:00+08:00"}
-{"detail":"/data/gocode/src/github.com/olongfen/contrib/log/log.go|346","level":"error","msg":"la la","time":"2020-07-28T17:54:06+08:00"}
-{"detail":"/data/gocode/src/github.com/olongfen/contrib/log/log.go|346","level":"error","msg":"[panic-recover] \"/data/gocode/src/contrib/log/log_test.go:23|TestPanicRecover\" runtime error: index out of range [1] with length 0","time":"2020-07-28T17:54:06+08:00"}
