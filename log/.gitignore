@@ -6,3 +6,4 @@
 log/example/*.log
 log/*.log
 *.yml
+main

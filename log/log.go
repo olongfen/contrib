@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -343,14 +344,70 @@ func (l *Logger) Panicln(args ...interface{}) {
 // EntryWith 格式化输出
 func (l *Logger) EntryWith(flg int) *logrus.Entry {
 	if flg&(log.Lshortfile|log.Llongfile) != 0 {
-		if _, file, line, ok := runtime.Caller(0); ok {
+		if pc, file, line, ok := runtime.Caller(2); ok {
+			var (
+				_fnName    = runtime.FuncForPC(pc).Name()
+				_fnNameLis = strings.Split(_fnName, ".")
+			)
+			fnName := _fnNameLis[len(_fnNameLis)-1]
 			return l.Logger.WithFields(logrus.Fields{
-				"detail": fmt.Sprintf("%s|%d", file, line),
+				"file": file,
+				"line": line,
+				"func": fnName,
 			})
 		}
 	}
 
 	return logrus.NewEntry(l.Logger)
+}
+
+// Recover panic 错误捕捉
+func (l *Logger) Recover() {
+	r := recover()
+	if r == nil {
+		return
+	}
+	var (
+		pc     [16]uintptr
+		n      = runtime.Callers(3, pc[:])
+		fields logrus.Fields
+	)
+	for _, _pc := range pc[:n] {
+		fn := runtime.FuncForPC(_pc)
+		if fn == nil {
+			continue
+		}
+		_fnName := fn.Name()
+		if strings.HasPrefix(_fnName, "runtime.") {
+			continue
+		}
+		file, line := fn.FileLine(_pc)
+
+		//
+		var (
+			_fnNameDir = strings.Split(_fnName, "/")
+			_fnNameLis = strings.Split(_fnName, ".")
+			_fnNameSrc string
+		)
+		if len(_fnNameDir) > 1 {
+			_fnNameSrc = _fnNameDir[0] + "/" + _fnNameDir[1] + "/"
+		} else {
+			_fnNameSrc = _fnNameDir[0]
+		}
+		fnName := _fnNameLis[len(_fnNameLis)-1]
+
+		// file
+		_pcLis := strings.Split(file, _fnNameSrc)
+		filePath := strings.Join(_pcLis, "")
+		fields = logrus.Fields{
+			"file": filePath,
+			"line": line,
+			"func": fnName,
+		}
+		goto PRINT
+	}
+PRINT:
+	l.Logger.WithFields(fields).Errorln(r)
 }
 
 // Close 关闭
@@ -365,11 +422,6 @@ func (l *Logger) Close() error {
 
 // Copy 复制
 func (l *Logger) Copy() (r *Logger) {
-	//r = new(Logger)
-	//*r = *l
-	//r.Logger = logrus.New()
-	//*r.Logger = *l.Logger
-	//r.Logger.Out = l.Logger.Out
 	r = New()
 	r.SetLevel(uint32(l.Level))
 	r.Out = l.Out
@@ -387,11 +439,11 @@ func New() *Logger {
 }
 
 // NewLogFile new log file
-func NewLogFile(logPath string, isPrint bool) (d *Logger) {
+func NewLogFile(logPath string) (d *Logger) {
 	var (
 		//f   *os.File
-		rf  *rotatelogs.RotateLogs
-		err error
+		rf, rfErr *rotatelogs.RotateLogs
+		err       error
 	)
 	d = New()
 
@@ -411,71 +463,67 @@ func NewLogFile(logPath string, isPrint bool) (d *Logger) {
 		rotatelogs.WithRotationTime(24*time.Hour), // 日志切割时间间隔
 		// rotatelogs.WithRotationCount(RotationCount),
 	); err == nil {
-		if isPrint {
-			d.Hooks.Add(lfshook.NewHook(
-				lfshook.WriterMap{
-					logrus.TraceLevel: rf,
-					logrus.DebugLevel: rf,
-					logrus.InfoLevel:  rf,
-					logrus.WarnLevel:  rf,
-					// log.ErrorLevel: rf,
-					logrus.FatalLevel: rf,
-					logrus.PanicLevel: rf,
-				},
-				&logrus.JSONFormatter{},
-			))
-		} else {
-			d.Out = rf
-		}
+		rfErr, _ = rotatelogs.New(
+			logPath+".%Y-%m-%d.error",
+			//rotatelogs.WithLinkName(logPath),
+			rotatelogs.WithMaxAge(7*24*time.Hour),     // 文件最大保存时间
+			rotatelogs.WithRotationTime(24*time.Hour), // 日志切割时间间隔
+			// rotatelogs.WithRotationCount(RotationCount),
+		)
+		d.Hooks.Add(lfshook.NewHook(
+			lfshook.WriterMap{
+				logrus.TraceLevel: rf,
+				logrus.DebugLevel: rf,
+				logrus.InfoLevel:  rf,
+				logrus.WarnLevel:  rf,
+				logrus.ErrorLevel: rfErr,
+				logrus.FatalLevel: rf,
+				logrus.PanicLevel: rf,
+			},
+			&logrus.JSONFormatter{},
+		))
 
 	} else {
 		logrus.Warnln(err)
 	}
-	d.SetFormatter(&logrus.JSONFormatter{})
-	// hook errors
-	d.AddHook(&HookError{Filepath: logPath + ".error"})
-
-	//if f, err = os.OpenFile(name, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600); err == nil {
-	//	d.Out = f
-	//}
 
 	return
 }
 
-// HookError hook error 错误钩子
-type HookError struct {
-	Filepath string
-	Out      io.WriteCloser
+// HookSelf hook self 钩子
+type HookSelf struct {
+	writers   lfshook.WriterMap
+	levels    []logrus.Level
+	lock      *sync.Mutex
+	formatter logrus.Formatter
 }
 
 // Levels level
-func (h *HookError) Levels() []logrus.Level {
-	return []logrus.Level{logrus.ErrorLevel}
+func (h *HookSelf) Levels() []logrus.Level {
+	return logrus.AllLevels
 }
 
-func (h *HookError) SetFormat(logger *logrus.Logger, format logrus.Formatter) *HookError {
+func (h *HookSelf) SetFormat(logger *logrus.Logger, format logrus.Formatter) *HookSelf {
 	logger.SetFormatter(format)
 	return h
 }
 
 // Fire fire
-func (h *HookError) Fire(entry *logrus.Entry) error {
-	if entry.Level == logrus.ErrorLevel && len(h.Filepath) > 0 {
-		if _s, _err := entry.String(); _err == nil {
-			if _, _err = os.Stat(h.Filepath); os.IsNotExist(_err) && h.Out != nil {
-				h.Out.Close()
-				h.Out = nil
-			}
-			if h.Out == nil {
-				h.Out, _ = os.OpenFile(h.Filepath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-			}
-			if h.Out != nil {
-				_, _ = h.Out.Write([]byte(_s))
-			}
-		} else {
-			return _err
-		}
+func (h *HookSelf) Fire(entry *logrus.Entry) error {
+	var (
+		writer io.Writer
+		msg    []byte
+		err    error
+	)
+
+	// use our formatter instead of entry.String()
+	msg, err = h.formatter.Format(entry)
+
+	if err != nil {
+		log.Println("failed to generate string for entry:", err)
+		return err
 	}
+	_, err = writer.Write([]byte(msg))
 	return nil
 }
 

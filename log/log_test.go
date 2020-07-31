@@ -6,20 +6,18 @@ import (
 )
 
 var (
-	l     = NewLogFile("./test",false)
+	l = NewLogFile("./test")
 )
 
 func Test_File(t *testing.T) {
-
 	l.Infof("ha ha")
 	l.Errorf("la la")
 }
 
 func TestPanicRecover(t *testing.T) {
-	var(
-		a =[]int{}
+	var (
+		a = []int{}
 	)
-	defer PanicRecover(l)
+	defer l.Recover()
 	fmt.Println(a[1])
 }
-
