@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -439,11 +438,11 @@ func New() *Logger {
 }
 
 // NewLogFile new log file
-func NewLogFile(logPath string) (d *Logger) {
+func NewLogFile(logPath string, stdout bool) (d *Logger) {
 	var (
 		//f   *os.File
-		rf, rfErr *rotatelogs.RotateLogs
-		err       error
+		rf  *rotatelogs.RotateLogs
+		err error
 	)
 	d = New()
 
@@ -454,7 +453,6 @@ func NewLogFile(logPath string) (d *Logger) {
 			panic(err)
 		}
 	}
-
 	// log file(s)
 	if rf, err = rotatelogs.New(
 		logPath+".%Y-%m-%d.log",
@@ -463,68 +461,28 @@ func NewLogFile(logPath string) (d *Logger) {
 		rotatelogs.WithRotationTime(24*time.Hour), // 日志切割时间间隔
 		// rotatelogs.WithRotationCount(RotationCount),
 	); err == nil {
-		rfErr, _ = rotatelogs.New(
-			logPath+".%Y-%m-%d.error",
-			//rotatelogs.WithLinkName(logPath),
-			rotatelogs.WithMaxAge(7*24*time.Hour),     // 文件最大保存时间
-			rotatelogs.WithRotationTime(24*time.Hour), // 日志切割时间间隔
-			// rotatelogs.WithRotationCount(RotationCount),
-		)
-		d.Hooks.Add(lfshook.NewHook(
-			lfshook.WriterMap{
-				logrus.TraceLevel: rf,
-				logrus.DebugLevel: rf,
-				logrus.InfoLevel:  rf,
-				logrus.WarnLevel:  rf,
-				logrus.ErrorLevel: rfErr,
-				logrus.FatalLevel: rf,
-				logrus.PanicLevel: rf,
-			},
-			&logrus.JSONFormatter{},
-		))
-
+		if stdout {
+			d.Hooks.Add(lfshook.NewHook(
+				lfshook.WriterMap{
+					logrus.TraceLevel: rf,
+					logrus.DebugLevel: rf,
+					logrus.InfoLevel:  rf,
+					logrus.WarnLevel:  rf,
+					logrus.ErrorLevel: rf,
+					logrus.FatalLevel: rf,
+					logrus.PanicLevel: rf,
+				},
+				&logrus.JSONFormatter{},
+			))
+		} else {
+			d.Out = rf
+			d.SetFormatter(&logrus.JSONFormatter{})
+		}
 	} else {
 		logrus.Warnln(err)
 	}
 
 	return
-}
-
-// HookSelf hook self 钩子
-type HookSelf struct {
-	writers   lfshook.WriterMap
-	levels    []logrus.Level
-	lock      *sync.Mutex
-	formatter logrus.Formatter
-}
-
-// Levels level
-func (h *HookSelf) Levels() []logrus.Level {
-	return logrus.AllLevels
-}
-
-func (h *HookSelf) SetFormat(logger *logrus.Logger, format logrus.Formatter) *HookSelf {
-	logger.SetFormatter(format)
-	return h
-}
-
-// Fire fire
-func (h *HookSelf) Fire(entry *logrus.Entry) error {
-	var (
-		writer io.Writer
-		msg    []byte
-		err    error
-	)
-
-	// use our formatter instead of entry.String()
-	msg, err = h.formatter.Format(entry)
-
-	if err != nil {
-		log.Println("failed to generate string for entry:", err)
-		return err
-	}
-	_, err = writer.Write([]byte(msg))
-	return nil
 }
 
 // PanicRecover 统一处理panic

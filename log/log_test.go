@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	l = NewLogFile("./test")
+	l = NewLogFile("./test", true)
 )
 
 func Test_File(t *testing.T) {
