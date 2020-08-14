@@ -437,7 +437,7 @@ func New() *Logger {
 }
 
 // NewLogFile new log file
-func NewLogFile(logPath string, stdout bool, p string, options ...rotatelogs.Option) (d *Logger) {
+func NewLogFile(logPath string, isProduct bool, p string, options ...rotatelogs.Option) (d *Logger) {
 	var (
 		//f   *os.File
 		rf  *rotatelogs.RotateLogs
@@ -457,7 +457,7 @@ func NewLogFile(logPath string, stdout bool, p string, options ...rotatelogs.Opt
 		logPath+p,
 		options...,
 	); err == nil {
-		if stdout {
+		if !isProduct {
 			d.Hooks.Add(lfshook.NewHook(
 				lfshook.WriterMap{
 					logrus.TraceLevel: rf,
