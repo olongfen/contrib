@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"time"
 )
 
 // Log flag
@@ -438,7 +437,7 @@ func New() *Logger {
 }
 
 // NewLogFile new log file
-func NewLogFile(logPath string, stdout bool) (d *Logger) {
+func NewLogFile(logPath string, stdout bool, p string, options ...rotatelogs.Option) (d *Logger) {
 	var (
 		//f   *os.File
 		rf  *rotatelogs.RotateLogs
@@ -455,11 +454,8 @@ func NewLogFile(logPath string, stdout bool) (d *Logger) {
 	}
 	// log file(s)
 	if rf, err = rotatelogs.New(
-		logPath+".%Y-%m-%d.log",
-		//rotatelogs.WithLinkName(logPath),
-		rotatelogs.WithMaxAge(7*24*time.Hour),     // 文件最大保存时间
-		rotatelogs.WithRotationTime(24*time.Hour), // 日志切割时间间隔
-		// rotatelogs.WithRotationCount(RotationCount),
+		logPath+p,
+		options...,
 	); err == nil {
 		if stdout {
 			d.Hooks.Add(lfshook.NewHook(
