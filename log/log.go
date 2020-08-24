@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 )
 
 // Log flag
@@ -436,8 +437,26 @@ func New() *Logger {
 	return d
 }
 
+type ParamLog struct {
+	Path       string
+	Stdout     bool
+	P          string
+	Ratatelogs []rotatelogs.Option
+}
+
+func (p *ParamLog) Init() {
+	if len(p.P) == 0 {
+		p.P = ".%Y-%m-%d.log"
+	}
+	if len(p.Ratatelogs) == 0 {
+		p.Ratatelogs = append(p.Ratatelogs, rotatelogs.WithRotationTime(time.Hour*24))
+		p.Ratatelogs = append(p.Ratatelogs, rotatelogs.WithMaxAge(time.Hour*24*30))
+	}
+}
+
 // NewLogFile new log file
-func NewLogFile(logPath string, isProduct bool, p string, options ...rotatelogs.Option) (d *Logger) {
+func NewLogFile(param ParamLog) (d *Logger) {
+	param.Init()
 	var (
 		//f   *os.File
 		rf  *rotatelogs.RotateLogs
@@ -446,7 +465,7 @@ func NewLogFile(logPath string, isProduct bool, p string, options ...rotatelogs.
 	d = New()
 
 	// ensure director
-	_dir := filepath.Dir(logPath)
+	_dir := filepath.Dir(param.Path)
 	if _, _err := os.Stat(_dir); os.IsNotExist(_err) {
 		if err = os.MkdirAll(_dir, os.ModePerm); err != nil {
 			panic(err)
@@ -454,10 +473,10 @@ func NewLogFile(logPath string, isProduct bool, p string, options ...rotatelogs.
 	}
 	// log file(s)
 	if rf, err = rotatelogs.New(
-		logPath+p,
-		options...,
+		param.Path+param.P,
+		param.Ratatelogs...,
 	); err == nil {
-		if !isProduct {
+		if param.Stdout {
 			d.Hooks.Add(lfshook.NewHook(
 				lfshook.WriterMap{
 					logrus.TraceLevel: rf,
