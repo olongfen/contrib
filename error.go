@@ -63,8 +63,18 @@ func (e *Error) SetMeta(m interface{}) *Error {
 }
 
 func (e *Error) GetMeta() string {
-
-	return fmt.Sprintf("meta: %s", JSONMarshalMust(e.meta))
+	switch e.meta.(type) {
+	case string:
+		return fmt.Sprintf("meta: %s", e.meta)
+	case int, int32, int16, int8, int64:
+		return fmt.Sprintf("meta: %v", e.meta)
+	case uint, uint8, uint16, uint32, uint64:
+		return fmt.Sprintf("meta: %v", e.meta)
+	case float32, float64:
+		return fmt.Sprintf("meta: %v", e.meta)
+	default:
+		return fmt.Sprintf("meta: %s", JSONMarshalMust(e.meta))
+	}
 }
 
 func (e *Error) Error() string {
