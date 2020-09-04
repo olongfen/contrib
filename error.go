@@ -3,20 +3,20 @@ package contrib
 import "fmt"
 
 var (
-	ErrSessionKeyUndefined            = &Error{1, "session key undefined", "contrib"}         // session key undefined
-	ErrSessionUndefined               = &Error{2, "session undefined", "contrib"}             // session undefined
-	ErrSessionExpUndefined            = &Error{3, "session expire time undefined", "contrib"} // session expire time undefined
-	ErrSessionUidUndefined            = &Error{4, "session uid undefined", "contrib"}         // 没有定义uid的session视为非法
-	ErrSessionLevelInvalid            = &Error{5, "session level invalid", "contrib"}         // session会话级别非法
-	ErrSessionExpMaxOutOfRange        = &Error{6, "session exp out of range", "contrib"}      // session会话有效期超出范围
-	ErrTokenParseTypeNotSupport       = &Error{7, "session type not support", "contrib"}      // 不支持的解析类型
-	ErrTokenParseSignMethodNotSupport = &Error{8, "unexpected signing method", "contrib"}     // 不支持的解析方法
-	ErrTokenInvalid                   = &Error{9, "token invalid", "contrib"}                 // token.valid为false
-	ErrTokenClaimsInvalid             = &Error{10, "token claims invalid", "contrib"}         // token.Claims无法解析出
-	ErrTokenChangePassword            = &Error{11, "token change password", "contrib"}        // token密码改变
-	ErrTokenChangeFreeze              = &Error{12, "token change freeze", "contrib"}          // token状态改变
-	ErrTokenChangeLogout              = &Error{13, "token change logout", "contrib"}          // token状态改变
-	ErrTokenReqHeaderOrFormKeyInvalid = &Error{14, "request header key or form key invalid by token", "contrib"}
+	ErrSessionKeyUndefined            = &Error{code: 1, detail: "session key undefined", prefix: "contrib"}         // session key undefined
+	ErrSessionUndefined               = &Error{code: 2, detail: "session undefined", prefix: "contrib"}             // session undefined
+	ErrSessionExpUndefined            = &Error{code: 3, detail: "session expire time undefined", prefix: "contrib"} // session expire time undefined
+	ErrSessionUidUndefined            = &Error{code: 4, detail: "session uid undefined", prefix: "contrib"}         // 没有定义uid的session视为非法
+	ErrSessionLevelInvalid            = &Error{code: 5, detail: "session level invalid", prefix: "contrib"}         // session会话级别非法
+	ErrSessionExpMaxOutOfRange        = &Error{code: 6, detail: "session exp out of range", prefix: "contrib"}      // session会话有效期超出范围
+	ErrTokenParseTypeNotSupport       = &Error{code: 7, detail: "session type not support", prefix: "contrib"}      // 不支持的解析类型
+	ErrTokenParseSignMethodNotSupport = &Error{code: 8, detail: "unexpected signing method", prefix: "contrib"}     // 不支持的解析方法
+	ErrTokenInvalid                   = &Error{code: 9, detail: "token invalid", prefix: "contrib"}                 // token.valid为false
+	ErrTokenClaimsInvalid             = &Error{code: 10, detail: "token claims invalid", prefix: "contrib"}         // token.Claims无法解析出
+	ErrTokenChangePassword            = &Error{code: 11, detail: "token change password", prefix: "contrib"}        // token密码改变
+	ErrTokenChangeFreeze              = &Error{code: 12, detail: "token change freeze", prefix: "contrib"}          // token状态改变
+	ErrTokenChangeLogout              = &Error{code: 13, detail: "token change logout", prefix: "contrib"}          // token状态改变
+	ErrTokenReqHeaderOrFormKeyInvalid = &Error{code: 14, detail: "request header key or form key invalid by token", prefix: "contrib"}
 )
 
 // Error translate
@@ -24,6 +24,7 @@ type Error struct {
 	code   int32
 	detail string
 	prefix string
+	meta   interface{}
 }
 
 // NewError
@@ -56,6 +57,16 @@ func (e *Error) SetDetail(c string) *Error {
 	return e
 }
 
+func (e *Error) SetMeta(m interface{}) *Error {
+	e.meta = m
+	return e
+}
+
+func (e *Error) GetMeta() string {
+
+	return fmt.Sprintf("meta: %s", JSONMarshalMust(e.meta))
+}
+
 func (e *Error) Error() string {
-	return e.GetPrefix() + "," + e.GetDetail()
+	return e.GetPrefix() + "," + e.GetDetail() + "," + e.GetMeta()
 }
