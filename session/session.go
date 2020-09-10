@@ -43,12 +43,13 @@ const (
 	TokenTagIat = "iat"
 	TokenTagJti = "jti"
 	// 自定义部分
-	TokenTagCre      = "cre"   // 创建于
-	TokenTagUid      = "uid"   //
-	TokenTagLevel    = "level" //
-	TokenTagPsw      = "psw"   //
-	TokenTagIp       = "ip"    //
-	TokenTagId       = "id"    //
+	TokenTagCre      = "cre"      // 创建于
+	TokenTagUid      = "uid"      //
+	TokenTagLevel    = "level"    //
+	TokenTagPsw      = "psw"      //
+	TokenTagIp       = "ip"       //
+	TokenTagId       = "id"       //
+	TokenTagUsername = "username" //
 	TokenTagDeviceId = "deviceId"
 )
 
@@ -61,6 +62,7 @@ type Params struct {
 	IP         string
 	ID         int64
 	DeviceID   string
+	Username   string
 	// 验证
 	Password string
 }
@@ -76,6 +78,8 @@ type Session struct {
 	IP         string `json:"ip,omitempty"`         // 登陆地址
 	ID         int64  `json:"id,omitempty"`         // 唯一标记,用户id主键
 	DeviceID   string `json:"deviceId"`
+	Username   string `json:"username"` // 用户名，唯一
+
 	// 验证
 	Password string `json:"password,omitempty"` // 密码哈希摘要
 	// cache
