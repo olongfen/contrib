@@ -2,17 +2,14 @@ package session
 
 import (
 	"testing"
-	"time"
 )
 
 var (
 	methods = []string{"RS256", "ES256", "HS256"}
 	se      = &Session{
 		ExpireTime: int64(TokenExpNormal),
-		CreateTime: time.Now().Unix(),
 		UID:        "1222222222222222",
-		Password:   "123456",
-		Level:      SessionLevelNormal,
+		Content:    map[string]interface{}{"password": 11111},
 	}
 )
 

@@ -321,38 +321,25 @@ func (l *Logger) Fatalln(args ...interface{}) {
 
 // Panic panic
 func (l *Logger) Panic(args ...interface{}) {
-	if l.Level >= logrus.PanicLevel {
-		l.EntryWith(l.LogFlag).Panic(args...)
-	}
+	l.EntryWith(l.LogFlag).Panic(args...)
 }
 
 // Panicf panic
 func (l *Logger) Panicf(format string, args ...interface{}) {
-	if l.Level >= logrus.PanicLevel {
-		l.EntryWith(l.LogFlag).Panicf(format, args...)
-	}
+	l.EntryWith(l.LogFlag).Panicf(format, args...)
 }
 
 // Panicln panic
 func (l *Logger) Panicln(args ...interface{}) {
-	if l.Level >= logrus.PanicLevel {
-		l.EntryWith(l.LogFlag).Panicln(args...)
-	}
+	l.EntryWith(l.LogFlag).Panicln(args...)
 }
 
 // EntryWith 格式化输出
 func (l *Logger) EntryWith(flg int) *logrus.Entry {
 	if flg&(log.Lshortfile|log.Llongfile) != 0 {
-		if pc, file, line, ok := runtime.Caller(2); ok {
-			var (
-				_fnName    = runtime.FuncForPC(pc).Name()
-				_fnNameLis = strings.Split(_fnName, ".")
-			)
-			fnName := _fnNameLis[len(_fnNameLis)-1]
+		if _, file, line, ok := runtime.Caller(2); ok {
 			return l.Logger.WithFields(logrus.Fields{
-				"file": file,
-				"line": line,
-				"func": fnName,
+				"source": fmt.Sprintf(`%s|%d`, file, line),
 			})
 		}
 	}
@@ -384,24 +371,22 @@ func (l *Logger) Recover() {
 
 		//
 		var (
-			_fnNameDir = strings.Split(_fnName, "/")
-			_fnNameLis = strings.Split(_fnName, ".")
-			_fnNameSrc string
+		// _fnNameDir = strings.Split(_fnName, "/")
+		//_fnNameLis = strings.Split(_fnName, ".")
+		//_fnNameSrc string
 		)
-		if len(_fnNameDir) > 1 {
-			_fnNameSrc = _fnNameDir[0] + "/" + _fnNameDir[1] + "/"
-		} else {
-			_fnNameSrc = _fnNameDir[0]
-		}
-		fnName := _fnNameLis[len(_fnNameLis)-1]
+		//if len(_fnNameDir) > 1 {
+		//	_fnNameSrc = _fnNameDir[0] + "/" + _fnNameDir[1] + "/"
+		//} else {
+		//	_fnNameSrc = _fnNameDir[0]
+		//}
+		//fnName := _fnNameLis[len(_fnNameLis)-1]
 
 		// file
-		_pcLis := strings.Split(file, _fnNameSrc)
-		filePath := strings.Join(_pcLis, "")
+		//_pcLis := strings.Split(file, _fnNameSrc)
+		//filePath := strings.Join(_pcLis, "")
 		fields = logrus.Fields{
-			"file": filePath,
-			"line": line,
-			"func": fnName,
+			"source": fmt.Sprintf("%s|%d", file, line),
 		}
 		goto PRINT
 	}

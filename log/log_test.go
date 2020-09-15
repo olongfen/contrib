@@ -6,7 +6,10 @@ import (
 )
 
 var (
-	l = NewLogFile("./test", true)
+	l = NewLogFile(ParamLog{
+		Path:   "./test",
+		Stdout: true,
+	})
 )
 
 func Test_File(t *testing.T) {

@@ -43,14 +43,9 @@ const (
 	TokenTagIat = "iat"
 	TokenTagJti = "jti"
 	// 自定义部分
-	TokenTagCre      = "cre"      // 创建于
-	TokenTagUid      = "uid"      //
-	TokenTagLevel    = "level"    //
-	TokenTagPsw      = "psw"      //
-	TokenTagIp       = "ip"       //
-	TokenTagId       = "id"       //
-	TokenTagUsername = "username" //
-	TokenTagDeviceId = "deviceId"
+	TokenTagUid     = "uid"   //
+	TokenTagLevel   = "level" //
+	TokenTagContent = "content"
 )
 
 type Params struct {
@@ -70,20 +65,10 @@ type Params struct {
 // session规范
 type Session struct {
 	// 逻辑属性
-	ExpireTime int64 `json:"expireTime,omitempty"` // 超时时间戳
-	// 内容
-	CreateTime int64  `json:"createTime,omitempty"` // 创建时间戳
+	ExpireTime int64  `json:"expireTime,omitempty"` // 超时时间戳
 	UID        string `json:"uid,omitempty"`        // 用户uid,唯一uid
-	Level      string `json:"level,omitempty"`      // 会话等级
-	IP         string `json:"ip,omitempty"`         // 登陆地址
-	ID         int64  `json:"id,omitempty"`         // 唯一标记,用户id主键
-	DeviceID   string `json:"deviceId"`
-	Username   string `json:"username"` // 用户名，唯一
-
-	// 验证
-	Password string `json:"password,omitempty"` // 密码哈希摘要
-	// cache
-	CacheToken interface{} `json:"-"` //
+	// 内容
+	Content project.DataBody
 }
 
 // **
@@ -103,7 +88,11 @@ func (s *Session) Valid() (err error) {
 
 	// expire: 以now时间点验证
 	var now_ = time.Now()
-	switch s.Level {
+	level, _err := s.Content.GetValueByString("level")
+	if _err != nil {
+		level = SessionLevelNormal
+	}
+	switch level {
 	case SessionLevelNormal:
 		if s.ExpireTime > now_.Add(SessionExpMaxNormal).UnixNano() {
 			err = project.ErrSessionExpMaxOutOfRange
@@ -116,9 +105,6 @@ func (s *Session) Valid() (err error) {
 			return
 		}
 		break
-	default:
-		err = project.ErrSessionLevelInvalid
-		return
 	}
 
 	return

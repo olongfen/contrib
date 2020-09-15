@@ -57,9 +57,8 @@ func (k *Key) SessionDecode(inf interface{}) (ret *Session, err error) {
 
 	// 手动解析
 	ret = new(Session)
-	ret.CacheToken = inf
 	// 逻辑属性
-	if v, ok := val[TokenTagExp]; ok == true {
+	if v, ok := val[TokenTagExp]; ok {
 		switch v_ := v.(type) {
 		case int32:
 			ret.ExpireTime = int64(v_)
@@ -75,45 +74,14 @@ func (k *Key) SessionDecode(inf interface{}) (ret *Session, err error) {
 			break
 		}
 	}
-	// 内容
-	if v, ok := val[TokenTagCre]; ok == true {
-		if s, ok := v.(float64); ok == true {
-			ret.CreateTime = int64(s)
-		}
-	}
-	if v, ok := val[TokenTagUid]; ok == true {
+	if v, ok := val[TokenTagUid]; ok {
 		if s, ok := v.(string); ok == true {
 			ret.UID = s
 		}
 	}
-	if v, ok := val[TokenTagLevel]; ok == true {
-		if s, ok := v.(string); ok == true {
-			ret.Level = s
-		}
-	}
-	if v, ok := val[TokenTagPsw]; ok == true {
-		if s, ok := v.(string); ok == true {
-			ret.Password = s
-		}
-	}
-	if v, ok := val[TokenTagIp]; ok == true {
-		if s, ok := v.(string); ok == true {
-			ret.IP = s
-		}
-	}
-	if v, ok := val[TokenTagId]; ok == true {
-		if s, ok := v.(int64); ok == true {
-			ret.ID = s
-		}
-	}
-	if v, ok := val[TokenTagUsername]; ok {
-		if s, _ok := v.(string); _ok {
-			ret.Username = s
-		}
-	}
-	if v, ok := val[TokenTagDeviceId]; ok {
-		if s, _ok := v.(string); _ok {
-			ret.DeviceID = s
+	if v, ok := val[TokenTagContent]; ok {
+		if s, ok := v.(map[string]interface{}); ok == true {
+			ret.Content = s
 		}
 	}
 
@@ -145,36 +113,12 @@ func (k *Key) SessionEncode(s *Session) (token string, err error) {
 	// 必填:逻辑属性
 	m[TokenTagExp] = s.ExpireTime // ExpireTime
 
-	// 可选内容
-	if s.CreateTime > 0 {
-		// cre
-		m[TokenTagCre] = s.CreateTime
-	}
 	if len(s.UID) > 0 {
 		// uid
 		m[TokenTagUid] = s.UID
 	}
-	if len(s.Level) > 0 {
-		// level
-		m[TokenTagLevel] = s.Level
-	}
-	if len(s.Password) > 0 {
-		// psw
-		m[TokenTagPsw] = s.Password
-	}
-	if len(s.IP) > 0 {
-		// ip
-		m[TokenTagIp] = s.IP
-	}
-	if s.ID > 0 {
-		// id
-		m[TokenTagId] = s.ID
-	}
-	if len(s.DeviceID) > 0 {
-		m[TokenTagDeviceId] = s.DeviceID
-	}
-	if len(s.Username) > 0 {
-		m[TokenTagUsername] = s.Username
+	if s.Content != nil {
+		m[TokenTagContent] = s.Content
 	}
 
 	token, err = k.TokenEncode(m) // 默认加密
