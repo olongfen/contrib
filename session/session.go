@@ -53,13 +53,7 @@ type Params struct {
 	// 逻辑属性
 	ExpireTime int64
 	UID        string
-	Level      string
-	IP         string
-	ID         int64
-	DeviceID   string
-	Username   string
-	// 验证
-	Password string
+	Content    project.DataBody
 }
 
 // session规范
