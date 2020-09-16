@@ -28,9 +28,8 @@ var (
 	TokenExpLong      = time.Hour * 24 * 7 // 超长登录一周
 	TokenExpSecure    = time.Minute * 30   // 默认安全会话30分钟
 	// 会话最大有效期
-	SessionExpMaxNormal = time.Hour * 24 * 365 // 普通会话最长一年
-	SessionExpMaxLong   = time.Hour * 24 * 365 // 超长会话最长一年
-	SessionExpMaxSecure = time.Hour * 24       // 安全会话最长一天
+	ExpMaxNormal = time.Hour * 24 * 7 // 普通会话最长一周
+	ExpMaxSecure = time.Hour * 24     // 安全会话最长一天
 )
 
 const (
@@ -88,13 +87,13 @@ func (s *Session) Valid() (err error) {
 	}
 	switch level {
 	case SessionLevelNormal:
-		if s.ExpireTime > now_.Add(SessionExpMaxNormal).UnixNano() {
+		if s.ExpireTime > now_.Add(ExpMaxNormal).UnixNano() {
 			err = project.ErrSessionExpMaxOutOfRange
 			return
 		}
 		break
 	case SessionLevelSecure:
-		if s.ExpireTime > now_.Add(SessionExpMaxSecure).UnixNano() {
+		if s.ExpireTime > now_.Add(ExpMaxSecure).UnixNano() {
 			err = project.ErrSessionExpMaxOutOfRange
 			return
 		}
