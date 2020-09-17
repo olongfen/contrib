@@ -78,5 +78,13 @@ func (e *Error) GetMeta() string {
 }
 
 func (e *Error) Error() string {
-	return e.GetPrefix() + "," + e.GetDetail() + "," + e.GetMeta()
+	if e.meta != nil {
+		// reset meta
+		defer func() {
+			e.meta = nil
+		}()
+		return e.GetPrefix() + "," + e.GetDetail() + "," + e.GetMeta()
+	}
+	return e.GetPrefix() + "," + e.GetDetail()
+
 }
