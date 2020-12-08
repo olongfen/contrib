@@ -6,14 +6,19 @@ import (
 
 var (
 	methods = []string{"RS256", "ES256", "HS256"}
-	se      = &Session{
-		ExpireTime: int64(TokenExpNormal),
-		UID:        "1222222222222222",
-		Content:    map[string]interface{}{"password": 11111},
-	}
+	se      *Session
 )
 
+func init_() {
+	se = &Session{
+		ExpireTime: int64(TokenExpNormal),
+		UID:        "1222222222222222",
+		Content:    map[string]interface{}{"password": "12321321312"},
+	}
+}
+
 func TestKey_SessionEncode_SessionDecode(t *testing.T) {
+	init_()
 	var (
 		err error
 	)

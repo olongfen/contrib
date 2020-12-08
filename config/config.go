@@ -51,7 +51,7 @@ func LoadConfigAndSave(configPath string, targetConfig InterfaceConfig, defaultC
 	if fileInfo, err = os.Stat(configPath); err != nil {
 		if os.IsNotExist(err) {
 			if targetConfig == nil {
-				err = fmt.Errorf(`[Config] dedaultConfig undefined, "%s" error: %v`, configPath, err)
+				err = fmt.Errorf(`[Config] dedaultConfig undefined, "%s" utils: %v`, configPath, err)
 				return
 			}
 			// 自动创建配置文件
@@ -179,7 +179,7 @@ func (c *Config) MonitorChange() {
 				if fileInfo.IsDir() {
 					log.Println(err)
 				}
-				log.Println("get file stat error: ", err)
+				log.Println("get file stat utils: ", err)
 				return
 			}
 

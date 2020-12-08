@@ -1,7 +1,7 @@
 package session
 
 import (
-	project "github.com/olongfen/contrib"
+	error2 "github.com/olongfen/contrib/utils"
 
 	"net/http"
 )
@@ -9,7 +9,7 @@ import (
 // 取出token字符串
 func PubGetTokenFromReq(r *http.Request) (token string, err error) {
 	if r == nil {
-		err = project.ErrSessionUndefined
+		err = error2.ErrSessionUndefined
 		return
 	}
 
@@ -28,7 +28,7 @@ func PubGetTokenFromReq(r *http.Request) (token string, err error) {
 					token = v
 					return
 				} else {
-					err = project.ErrTokenReqHeaderOrFormKeyInvalid
+					err = error2.ErrTokenReqHeaderOrFormKeyInvalid
 					return
 				}
 
@@ -48,16 +48,16 @@ func PubTokenCodeError(code int8) (err error) {
 	case TokenCodePass:
 		break
 	case TokenCodePsw:
-		err = project.ErrTokenChangePassword
+		err = error2.ErrTokenChangePassword
 		break
 	case TokenCodeFreeze:
-		err = project.ErrTokenChangeFreeze
+		err = error2.ErrTokenChangeFreeze
 		break
 	case TokenCodeLogout:
-		err = project.ErrTokenChangeLogout
+		err = error2.ErrTokenChangeLogout
 		break
 	default:
-		err = project.ErrTokenInvalid
+		err = error2.ErrTokenInvalid
 		break
 	}
 	return

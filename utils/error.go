@@ -1,6 +1,8 @@
-package contrib
+package utils
 
-import "fmt"
+import (
+	"fmt"
+)
 
 var (
 	ErrSessionKeyUndefined            = &Error{code: 1, detail: "session key undefined", prefix: "contrib"}         // session key undefined

@@ -1,15 +1,15 @@
 package session
 
 import (
-	project "github.com/olongfen/contrib"
+	error2 "github.com/olongfen/contrib/utils"
 
 	"time"
 )
 
 const (
 	// 会话级别
-	SessionLevelNormal = ""       // 默认会话
-	SessionLevelSecure = "secure" // 安全会话
+	LevelNormal = ""       // 默认会话
+	LevelSecure = "secure" // 安全会话
 )
 
 const (
@@ -22,11 +22,7 @@ const (
 
 var (
 	// 有效期
-	TokenExpTenMinute = time.Minute * 10
-	TokenExpHour      = time.Hour
-	TokenExpNormal    = time.Hour * 24     // 默认登录有效期一天
-	TokenExpLong      = time.Hour * 24 * 7 // 超长登录一周
-	TokenExpSecure    = time.Minute * 30   // 默认安全会话30分钟
+	TokenExpNormal = time.Hour * 24 // 默认登录有效期一天
 	// 会话最大有效期
 	ExpMaxNormal = time.Hour * 24 * 7 // 普通会话最长一周
 	ExpMaxSecure = time.Hour * 24     // 安全会话最长一天
@@ -38,12 +34,8 @@ const (
 	TokenTagSub = "sub"
 	TokenTagAud = "aud"
 	TokenTagExp = "exp" // 超时
-	TokenTagNbf = "nbf" // 在此之前无效
-	TokenTagIat = "iat"
-	TokenTagJti = "jti"
 	// 自定义部分
-	TokenTagUid     = "uid"   //
-	TokenTagLevel   = "level" //
+	TokenTagUid     = "uid" //
 	TokenTagContent = "content"
 )
 
@@ -52,7 +44,7 @@ type Params struct {
 	// 逻辑属性
 	ExpireTime int64
 	UID        string
-	Content    project.DataBody
+	Content    *Key
 }
 
 // session规范
@@ -61,7 +53,7 @@ type Session struct {
 	ExpireTime int64  `json:"expireTime,omitempty"` // 超时时间戳
 	UID        string `json:"uid,omitempty"`        // 用户uid,唯一uid
 	// 内容
-	Content project.DataBody
+	Content map[string]interface{} `json:"content,omitempty"`
 }
 
 // **
@@ -69,32 +61,32 @@ func (s *Session) Valid() (err error) {
 
 	// 没有uid的session无价值
 	if len(s.UID) == 0 {
-		err = project.ErrSessionUidUndefined
+		err = error2.ErrSessionUidUndefined
 		return
 	}
 
 	// expire: normal
 	if s.ExpireTime <= 0 {
-		err = project.ErrSessionExpUndefined
+		err = error2.ErrSessionExpUndefined
 		return
 	}
 
 	// expire: 以now时间点验证
 	var now_ = time.Now()
-	level, _err := s.Content.GetValueByString("level")
-	if _err != nil {
-		level = SessionLevelNormal
+	level, _ok := s.Content["level"]
+	if !_ok {
+		level = LevelNormal
 	}
 	switch level {
-	case SessionLevelNormal:
+	case LevelNormal:
 		if s.ExpireTime > now_.Add(ExpMaxNormal).UnixNano() {
-			err = project.ErrSessionExpMaxOutOfRange
+			err = error2.ErrSessionExpMaxOutOfRange
 			return
 		}
 		break
-	case SessionLevelSecure:
+	case LevelSecure:
 		if s.ExpireTime > now_.Add(ExpMaxSecure).UnixNano() {
-			err = project.ErrSessionExpMaxOutOfRange
+			err = error2.ErrSessionExpMaxOutOfRange
 			return
 		}
 		break

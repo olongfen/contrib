@@ -103,21 +103,21 @@ func Warnln(args ...interface{}) {
 	}
 }
 
-// Error error
+// Error utils
 func Error(args ...interface{}) {
 	if Log.Level >= logrus.ErrorLevel {
 		Log.EntryWith(Log.LogFlag).Error(args...)
 	}
 }
 
-// Errorf error
+// Errorf utils
 func Errorf(format string, args ...interface{}) {
 	if Log.Level >= logrus.ErrorLevel {
 		Log.EntryWith(Log.LogFlag).Errorf(format, args...)
 	}
 }
 
-// Errorln error
+// Errorln utils
 func Errorln(args ...interface{}) {
 	if Log.Level >= logrus.ErrorLevel {
 		Log.EntryWith(Log.LogFlag).Errorln(args...)
@@ -262,21 +262,21 @@ func (l *Logger) Warnln(args ...interface{}) {
 	}
 }
 
-// Error error
+// Error utils
 func (l *Logger) Error(args ...interface{}) {
 	if l.Level >= logrus.ErrorLevel {
 		l.EntryWith(l.LogFlag).Error((args)...)
 	}
 }
 
-// Errorf error
+// Errorf utils
 func (l *Logger) Errorf(format string, args ...interface{}) {
 	if l.Level >= logrus.ErrorLevel {
 		l.EntryWith(l.LogFlag).Errorf(format, (args)...)
 	}
 }
 
-// Errorln error
+// Errorln utils
 func (l *Logger) Errorln(args ...interface{}) {
 	if l.Level >= logrus.ErrorLevel {
 		l.EntryWith(l.LogFlag).Errorln((args)...)

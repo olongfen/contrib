@@ -2,7 +2,7 @@ package session
 
 import (
 	"crypto/ecdsa"
-	middle "github.com/olongfen/contrib"
+	error2 "github.com/olongfen/contrib/utils"
 	"io/ioutil"
 
 	"github.com/dgrijalva/jwt-go"
@@ -42,7 +42,7 @@ func (k *Key) SetHookTokenCheck(f func(token interface{}) error) {
 // SessionDecode 解析出session
 func (k *Key) SessionDecode(inf interface{}) (ret *Session, err error) {
 	if k == nil {
-		err = middle.ErrSessionKeyUndefined
+		err = error2.ErrSessionKeyUndefined
 		return
 	}
 	var (
@@ -54,7 +54,6 @@ func (k *Key) SessionDecode(inf interface{}) (ret *Session, err error) {
 	if val, err = k.TokenDecode(inf); err != nil {
 		return
 	}
-
 	// 手动解析
 	ret = new(Session)
 	// 逻辑属性
@@ -75,12 +74,12 @@ func (k *Key) SessionDecode(inf interface{}) (ret *Session, err error) {
 		}
 	}
 	if v, ok := val[TokenTagUid]; ok {
-		if s, ok := v.(string); ok == true {
+		if s, ok := v.(string); ok {
 			ret.UID = s
 		}
 	}
 	if v, ok := val[TokenTagContent]; ok {
-		if s, ok := v.(map[string]interface{}); ok == true {
+		if s, ok := v.(map[string]interface{}); ok {
 			ret.Content = s
 		}
 	}
@@ -101,7 +100,7 @@ func (k *Key) SessionDecode(inf interface{}) (ret *Session, err error) {
 func (k *Key) SessionEncode(s *Session) (token string, err error) {
 
 	if s == nil {
-		err = middle.ErrSessionUndefined
+		err = error2.ErrSessionUndefined
 		return
 	} else if err = s.Valid(); err != nil {
 		return
@@ -120,7 +119,6 @@ func (k *Key) SessionEncode(s *Session) (token string, err error) {
 	if s.Content != nil {
 		m[TokenTagContent] = s.Content
 	}
-
 	token, err = k.TokenEncode(m) // 默认加密
 	return
 }
@@ -128,7 +126,7 @@ func (k *Key) SessionEncode(s *Session) (token string, err error) {
 // TokenDecode 解析出需要的值
 func (k *Key) TokenDecode(inf interface{}) (ret map[string]interface{}, err error) {
 	if k == nil {
-		err = middle.ErrSessionKeyUndefined
+		err = error2.ErrSessionKeyUndefined
 		return
 	}
 	switch v := inf.(type) {
@@ -149,7 +147,7 @@ func (k *Key) TokenDecode(inf interface{}) (ret map[string]interface{}, err erro
 		ret, err = k.tokenParse(token)
 		break
 	default:
-		err = middle.ErrTokenParseTypeNotSupport
+		err = error2.ErrTokenParseTypeNotSupport
 		break
 	}
 
@@ -229,7 +227,7 @@ func (k *Key) tokenParse(tokenStr string) (ret map[string]interface{}, err error
 	if token, err = jwt.Parse(tokenStr, k.parseKey); err != nil {
 		return
 	} else if token.Valid == false {
-		err = middle.ErrTokenInvalid
+		err = error2.ErrTokenInvalid
 		return
 	}
 
@@ -239,9 +237,9 @@ func (k *Key) tokenParse(tokenStr string) (ret map[string]interface{}, err error
 		if err = claims.Valid(); err != nil {
 			return
 		}
-		ret = map[string]interface{}(claims)
+		ret = claims
 	} else {
-		err = middle.ErrTokenClaimsInvalid
+		err = error2.ErrTokenClaimsInvalid
 		return
 	}
 
@@ -289,7 +287,7 @@ func (k *Key) parseKey(token *jwt.Token) (ret interface{}, err error) {
 	case *jwt.SigningMethodECDSA:
 		ret = k.ecdsaPublicKey
 	default:
-		err = fmt.Errorf("%s '%v'", middle.ErrTokenParseSignMethodNotSupport.Error(), token.Header["alg"])
+		err = fmt.Errorf("%s '%v'", error2.ErrTokenParseSignMethodNotSupport.Error(), token.Header["alg"])
 		break
 	}
 	return

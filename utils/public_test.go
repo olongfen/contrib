@@ -1,4 +1,4 @@
-package contrib
+package utils
 
 import "testing"
 
