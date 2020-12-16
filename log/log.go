@@ -427,6 +427,7 @@ type ParamLog struct {
 	Stdout     bool
 	P          string
 	Ratatelogs []rotatelogs.Option
+	Formatter  logrus.Formatter
 }
 
 func (p *ParamLog) Init() {
@@ -436,6 +437,9 @@ func (p *ParamLog) Init() {
 	if len(p.Ratatelogs) == 0 {
 		p.Ratatelogs = append(p.Ratatelogs, rotatelogs.WithRotationTime(time.Hour*24))
 		p.Ratatelogs = append(p.Ratatelogs, rotatelogs.WithMaxAge(time.Hour*24*30))
+	}
+	if p.Formatter == nil {
+		p.Formatter = &logrus.TextFormatter{}
 	}
 }
 
@@ -472,11 +476,11 @@ func NewLogFile(param ParamLog) (d *Logger) {
 					logrus.FatalLevel: rf,
 					logrus.PanicLevel: rf,
 				},
-				&logrus.JSONFormatter{},
+				param.Formatter,
 			))
 		} else {
 			d.Out = rf
-			d.SetFormatter(&logrus.JSONFormatter{})
+			d.SetFormatter(param.Formatter)
 		}
 	} else {
 		logrus.Warnln(err)
